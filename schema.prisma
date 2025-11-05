@@ -1,0 +1,172 @@
+// Serbian Loyalty App - Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  transactions      Transaction[]
+  reviewRequests    ReviewRequest[]
+  favoriteStores    UserFavoriteStore[]
+  apiKeys           ApiKey[]
+
+  @@map("users")
+}
+
+// Store model
+model Store {
+  id        String   @id @default(cuid())
+  name      String
+  location  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  transactions      Transaction[]
+  favoriteByUsers   UserFavoriteStore[]
+
+  @@map("stores")
+}
+
+// Product model
+model Product {
+  id          String        @id @default(cuid())
+  name        String
+  points      Int
+  status      ProductStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  transactionItems TransactionItem[]
+
+  @@index([name])
+  @@map("products")
+}
+
+// Transaction model (purchase/scan history)
+model Transaction {
+  id              String   @id @default(cuid())
+  userId          String
+  storeId         String
+  totalPoints     Int
+  receiptUrl      String?
+  receiptData     Json?
+  scannedAt       DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  // Relations
+  user  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store               @relation(fields: [storeId], references: [id])
+  items TransactionItem[]
+
+  @@index([userId])
+  @@index([storeId])
+  @@index([scannedAt])
+  @@map("transactions")
+}
+
+// Transaction items (individual products in a receipt)
+model TransactionItem {
+  id            String  @id @default(cuid())
+  transactionId String
+  productId     String?
+  productName   String
+  quantity      Int     @default(1)
+  price         Float?
+  points        Int     @default(0)
+  matched       Boolean @default(false)
+
+  // Relations
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  product     Product?    @relation(fields: [productId], references: [id])
+
+  @@index([transactionId])
+  @@map("transaction_items")
+}
+
+// Review Request model (for unknown products)
+model ReviewRequest {
+  id            String        @id @default(cuid())
+  userId        String
+  productName   String
+  receiptData   Json?
+  status        ReviewStatus  @default(PENDING)
+  adminComment  String?
+  pointsAwarded Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  reviewedAt    DateTime?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("review_requests")
+}
+
+// User Favorite Stores (many-to-many)
+model UserFavoriteStore {
+  id        String   @id @default(cuid())
+  userId    String
+  storeId   String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storeId])
+  @@map("user_favorite_stores")
+}
+
+// API Keys for webshop integration
+model ApiKey {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String   @unique
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  lastUsed  DateTime?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([key])
+  @@map("api_keys")
+}
+
+// Enums
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
