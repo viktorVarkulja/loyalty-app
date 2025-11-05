@@ -1,15 +1,18 @@
 <template>
-  <div class="home">
-    <h1>Welcome to Serbian Loyalty App!</h1>
-    <p v-if="authStore.user">Hello, {{ authStore.userName }}!</p>
-    <p>Your points: {{ authStore.userPoints }}</p>
-    <button @click="handleLogout" class="btn-logout">Logout</button>
-  </div>
+  <MainLayout>
+    <div class="home">
+      <h1>Welcome to Serbian Loyalty App!</h1>
+      <p v-if="authStore.user">Hello, {{ authStore.userName }}!</p>
+      <p>Your points: {{ authStore.userPoints }}</p>
+      <button @click="handleLogout" class="btn-logout">Logout</button>
+    </div>
+  </MainLayout>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import MainLayout from '../components/MainLayout.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
