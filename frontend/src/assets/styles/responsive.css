@@ -84,13 +84,7 @@
 }
 
 @media (min-width: 1024px) {
-  .bottom-nav {
-    display: none; /* Hide on desktop, show sidebar instead */
-  }
-
-  .main-content {
-    margin-left: 250px; /* Space for sidebar on desktop */
-  }
+  /* Bottom nav stays visible on desktop in this mobile-first design */
 }
 
 /* Modal Responsive */
