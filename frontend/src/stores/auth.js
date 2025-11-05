@@ -54,6 +54,10 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  function logout() {
+    clearAuth()
+  }
+
   return {
     // State
     user,
@@ -71,6 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
     setTokens,
     setUser,
     clearAuth,
+    logout,
     setLoading,
     setError,
     clearError,
