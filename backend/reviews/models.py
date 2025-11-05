@@ -25,21 +25,22 @@ class ReviewRequest(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='review_requests',
-        db_index=True
+        db_index=True,
+        db_column='userId'
     )
-    product_name = models.CharField(max_length=255)
-    receipt_data = models.JSONField(null=True, blank=True)
+    product_name = models.CharField(max_length=255, db_column='productName')
+    receipt_data = models.JSONField(null=True, blank=True, db_column='receiptData')
     status = models.CharField(
         max_length=10,
         choices=STATUS_CHOICES,
         default='PENDING',
         db_index=True
     )
-    admin_comment = models.TextField(null=True, blank=True)
-    points_awarded = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    reviewed_at = models.DateTimeField(null=True, blank=True)
+    admin_comment = models.TextField(null=True, blank=True, db_column='adminComment')
+    points_awarded = models.IntegerField(default=0, db_column='pointsAwarded')
+    created_at = models.DateTimeField(auto_now_add=True, db_column='createdAt')
+    updated_at = models.DateTimeField(auto_now=True, db_column='updatedAt')
+    reviewed_at = models.DateTimeField(null=True, blank=True, db_column='reviewedAt')
 
     class Meta:
         db_table = 'review_requests'

@@ -17,8 +17,8 @@ class Store(models.Model):
     id = models.CharField(max_length=30, primary_key=True, default=generate_cuid, editable=False)
     name = models.CharField(max_length=255)
     location = models.CharField(max_length=255, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_column='createdAt')
+    updated_at = models.DateTimeField(auto_now=True, db_column='updatedAt')
 
     class Meta:
         db_table = 'stores'
@@ -40,8 +40,8 @@ class Product(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     points = models.IntegerField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ACTIVE')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_column='createdAt')
+    updated_at = models.DateTimeField(auto_now=True, db_column='updatedAt')
 
     class Meta:
         db_table = 'products'
@@ -61,14 +61,16 @@ class UserFavoriteStore(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='favorite_stores'
+        related_name='favorite_stores',
+        db_column='userId'
     )
     store = models.ForeignKey(
         Store,
         on_delete=models.CASCADE,
-        related_name='favorited_by_users'
+        related_name='favorited_by_users',
+        db_column='storeId'
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_column='createdAt')
 
     class Meta:
         db_table = 'user_favorite_stores'
@@ -86,13 +88,14 @@ class ApiKey(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='api_keys'
+        related_name='api_keys',
+        db_column='userId'
     )
     key = models.CharField(max_length=255, unique=True, db_index=True)
     name = models.CharField(max_length=255)
     active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    last_used = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_column='createdAt')
+    last_used = models.DateTimeField(null=True, blank=True, db_column='lastUsed')
 
     class Meta:
         db_table = 'api_keys'
