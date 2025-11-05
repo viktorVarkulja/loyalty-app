@@ -111,4 +111,34 @@ const isActive = (path) => {
 .nav-item.scan-btn span {
   display: none;
 }
+
+/* Responsive adjustments */
+@media (min-width: 640px) {
+  .bottom-nav {
+    max-width: 640px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .nav-item {
+    padding: 10px 20px;
+    min-width: 80px;
+  }
+
+  .nav-item span {
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .nav-item {
+    padding: 12px 24px;
+    min-width: 100px;
+  }
+
+  .nav-item span {
+    font-size: 14px;
+  }
+}
 </style>
