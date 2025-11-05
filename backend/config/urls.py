@@ -21,6 +21,7 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView
 )
+from users.urls import webshop_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,4 +36,7 @@ urlpatterns = [
     path('api/', include('products.urls')),
     path('api/', include('transactions.urls')),
     path('api/', include('reviews.urls')),
+
+    # Webshop API (external integration)
+    path('api/', include(webshop_urlpatterns)),
 ]
