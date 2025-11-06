@@ -111,4 +111,61 @@ const isActive = (path) => {
 .nav-item.scan-btn span {
   display: none;
 }
+
+/* Responsive adjustments */
+/* Tablet - centered with constrained width */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .bottom-nav {
+    max-width: 640px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .nav-item {
+    padding: 10px 20px;
+    min-width: 80px;
+  }
+
+  .nav-item span {
+    font-size: 13px;
+  }
+}
+
+/* Desktop - full width with max-width container */
+@media (min-width: 1024px) {
+  .bottom-nav {
+    max-width: 100%;
+    left: 0;
+    transform: none;
+    justify-content: center;
+    gap: 40px;
+    padding: 0 40px;
+  }
+
+  .nav-item {
+    padding: 12px 32px;
+    min-width: 120px;
+  }
+
+  .nav-item span {
+    font-size: 15px;
+  }
+
+  .nav-item.scan-btn {
+    padding: 14px 36px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .bottom-nav {
+    gap: 60px;
+    padding: 0 60px;
+  }
+
+  .nav-item {
+    padding: 14px 40px;
+    min-width: 140px;
+  }
+}
 </style>
