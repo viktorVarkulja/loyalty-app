@@ -160,14 +160,62 @@
             <div class="mb-0" v-if="selectedTransaction.items && selectedTransaction.items.length > 0">
               <h3 class="m-0 mb-4 text-base font-semibold text-gray-800">Items ({{ selectedTransaction.items.length }})</h3>
               <div class="flex flex-col gap-3">
-                <div v-for="item in selectedTransaction.items" :key="item.id" class="flex justify-between items-start p-3 bg-gray-50 rounded-lg">
-                  <div class="flex-1 min-w-0">
-                    <p class="m-0 mb-1 text-sm font-semibold text-gray-800">{{ item.product_name }}</p>
-                    <p class="m-0 text-xs text-gray-400">{{ item.quantity }}x {{ formatCurrency(item.unit_price) }}</p>
+                <div v-for="item in selectedTransaction.items" :key="item.id" class="p-3 bg-gray-50 rounded-lg">
+                  <div class="flex justify-between items-start mb-2">
+                    <div class="flex-1 min-w-0">
+                      <p class="m-0 mb-1 text-sm font-semibold text-gray-800">{{ item.product_name }}</p>
+                      <p class="m-0 text-xs text-gray-400">{{ item.quantity }}x {{ formatCurrency(item.unit_price) }}</p>
+                    </div>
+                    <div class="text-right ml-3">
+                      <p class="m-0 mb-1 text-sm font-semibold text-gray-800">{{ formatCurrency(item.price) }}</p>
+                      <p class="m-0 text-xs text-primary font-semibold" v-if="item.points > 0">+{{ item.points }} pts</p>
+                      <p class="m-0 text-xs text-gray-400" v-else>0 pts</p>
+                    </div>
                   </div>
-                  <div class="text-right ml-3">
-                    <p class="m-0 mb-1 text-sm font-semibold text-gray-800">{{ formatCurrency(item.price) }}</p>
-                    <p class="m-0 text-xs text-primary font-semibold" v-if="item.points > 0">+{{ item.points }} pts</p>
+
+                  <!-- Review status and action -->
+                  <div v-if="!item.matched" class="mt-2 pt-2 border-t border-gray-200">
+                    <!-- Review status badges -->
+                    <div v-if="item.review_status === 'pending'" class="flex items-center gap-2 text-xs text-warning">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <span>Under review</span>
+                    </div>
+
+                    <div v-else-if="item.review_status === 'approved'" class="flex items-center gap-2 text-xs text-success">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      <span>Approved</span>
+                    </div>
+
+                    <div v-else-if="item.review_status === 'rejected'" class="flex items-center gap-2 text-xs text-error">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                      </svg>
+                      <span>Not approved</span>
+                    </div>
+
+                    <!-- Request review button -->
+                    <button
+                      v-else
+                      @click="requestReview(item)"
+                      :disabled="requestingReview"
+                      class="text-xs bg-primary text-white py-1.5 px-3 rounded-lg border-none cursor-pointer transition-all duration-200 flex items-center gap-1.5 hover:opacity-80 disabled:opacity-50"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                      </svg>
+                      Zatraži proveru
+                    </button>
                   </div>
                 </div>
               </div>
@@ -181,12 +229,13 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { transactionsService } from '../services'
+import { transactionsService, reviewsService } from '../services'
 import MainLayout from '../components/MainLayout.vue'
 
 const transactions = ref([])
 const selectedTransaction = ref(null)
 const isLoading = ref(false)
+const requestingReview = ref(false)
 const currentPage = ref(1)
 const totalPages = ref(1)
 const totalCount = ref(0)
@@ -263,6 +312,26 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+const requestReview = async (item) => {
+  if (requestingReview.value) return
+
+  requestingReview.value = true
+  try {
+    await reviewsService.requestItemReview(item.id)
+
+    // Update the item's review status locally
+    item.review_status = 'pending'
+
+    // Show success message
+    alert('Zahtev za proveru je uspešno poslat!')
+  } catch (error) {
+    console.error('Failed to request review:', error)
+    alert('Greška prilikom slanja zahteva. Molimo pokušajte ponovo.')
+  } finally {
+    requestingReview.value = false
+  }
 }
 
 onMounted(() => {

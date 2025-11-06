@@ -1,7 +1,10 @@
 import axios from 'axios'
 import router from '../router'
 
-const API_BASE_URL = 'http://localhost:8000/api'
+// Use environment variable or fallback to localhost
+// For phone access, start dev server with: npm run dev -- --host 0.0.0.0
+// Then access via your computer's IP address
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 // Create axios instance
 const api = axios.create({
