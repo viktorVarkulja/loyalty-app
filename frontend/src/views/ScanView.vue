@@ -82,7 +82,7 @@
             </svg>
           </div>
           <h2 class="m-0 mb-2 text-2xl font-bold">Receipt Scanned!</h2>
-          <p class="m-0 text-[32px] font-bold">+{{ scanResult.total_points }} points</p>
+          <p class="m-0 text-[32px] font-bold">+{{ Math.floor(scanResult.total_points) }} points</p>
         </div>
 
         <div class="p-6">
@@ -101,6 +101,36 @@
           <div class="flex justify-between items-center py-3">
             <span class="text-sm text-gray-400 font-medium">Date</span>
             <span class="text-[15px] text-gray-800 font-semibold">{{ formatDate(scanResult.scanned_at) }}</span>
+          </div>
+        </div>
+
+        <!-- Unmatched Items Section -->
+        <div v-if="unmatchedItems.length > 0" class="px-6 pb-6">
+          <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500 shrink-0 mt-0.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <div class="flex-1">
+                <h3 class="m-0 mb-1 text-sm font-semibold text-orange-800">{{ unmatchedItems.length }} item{{ unmatchedItems.length > 1 ? 's' : '' }} not matched</h3>
+                <p class="m-0 mb-3 text-xs text-orange-700">Request admin review to earn points for these items</p>
+                <button
+                  @click="requestReviewForAll"
+                  :disabled="requestingReview || reviewsRequested"
+                  class="text-sm bg-orange-500 text-white py-2 px-4 rounded-lg border-none cursor-pointer transition-all duration-200 flex items-center gap-2 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                  </svg>
+                  {{ requestingReview ? 'Requesting...' : reviewsRequested ? 'Review Requested' : 'Request Review' }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -133,10 +163,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { QrcodeStream } from 'vue-qrcode-reader'
-import { receiptsService } from '../services'
+import { receiptsService, reviewsService } from '../services'
 import { useAuthStore } from '../stores/auth'
 import MainLayout from '../components/MainLayout.vue'
 // Import barcode-detector polyfill for better browser compatibility
@@ -151,6 +181,14 @@ const scanResult = ref(null)
 const errorMessage = ref('')
 const showManualInput = ref(false)
 const manualQrData = ref('')
+const requestingReview = ref(false)
+const reviewsRequested = ref(false)
+
+// Computed property to get unmatched items
+const unmatchedItems = computed(() => {
+  if (!scanResult.value || !scanResult.value.items) return []
+  return scanResult.value.items.filter(item => !item.matched)
+})
 
 const startScanner = () => {
   console.log('Starting scanner...')
@@ -307,6 +345,7 @@ const scanAnother = () => {
   scanResult.value = null
   errorMessage.value = ''
   manualQrData.value = ''
+  reviewsRequested.value = false
 }
 
 const clearError = () => {
@@ -331,6 +370,31 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+const requestReviewForAll = async () => {
+  if (requestingReview.value || reviewsRequested.value || unmatchedItems.value.length === 0) return
+
+  requestingReview.value = true
+  try {
+    const promises = unmatchedItems.value.map(item =>
+      reviewsService.requestItemReview(item.id)
+    )
+    await Promise.all(promises)
+
+    // Update review status locally
+    unmatchedItems.value.forEach(item => {
+      item.review_status = 'pending'
+    })
+
+    reviewsRequested.value = true
+    alert(`Review requested for ${unmatchedItems.value.length} item(s)!`)
+  } catch (error) {
+    console.error('Failed to request reviews:', error)
+    alert('Error requesting reviews. Please try again.')
+  } finally {
+    requestingReview.value = false
+  }
 }
 </script>
 

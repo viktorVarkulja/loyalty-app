@@ -1,6 +1,9 @@
 <template>
   <router-view />
 
+  <!-- Session Expired Modal -->
+  <SessionExpiredModal :isVisible="showSessionExpiredModal" @close="closeSessionExpiredModal" />
+
   <!-- PWA Update Prompt -->
   <div v-if="needRefresh" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-2xl p-4 z-[9999] max-w-[90%] w-[400px] flex flex-col gap-3 animate-slide-up">
     <div class="flex items-center gap-3 text-gray-800 font-medium">
@@ -23,6 +26,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
+import { useAuthStore } from '@/stores/auth'
+import SessionExpiredModal from '@/components/SessionExpiredModal.vue'
+
+const authStore = useAuthStore()
+const showSessionExpiredModal = ref(false)
 
 const { needRefresh, updateServiceWorker } = useRegisterSW({
   onRegistered(registration) {
@@ -36,6 +44,31 @@ const { needRefresh, updateServiceWorker } = useRegisterSW({
 const closePrompt = () => {
   needRefresh.value = false
 }
+
+const closeSessionExpiredModal = () => {
+  showSessionExpiredModal.value = false
+  sessionStorage.removeItem('sessionExpired')
+}
+
+// Check token expiration on app mount
+onMounted(async () => {
+  // Check if we were redirected due to session expiration
+  if (sessionStorage.getItem('sessionExpired') === 'true') {
+    showSessionExpiredModal.value = true
+    return
+  }
+
+  // Check token expiration if user is authenticated
+  if (authStore.isAuthenticated) {
+    const isTokenValid = await authStore.checkTokenExpiration()
+
+    if (!isTokenValid) {
+      // Show session expired modal
+      showSessionExpiredModal.value = true
+      sessionStorage.setItem('sessionExpired', 'true')
+    }
+  }
+})
 </script>
 
 <style>

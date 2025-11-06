@@ -52,9 +52,24 @@ const router = createRouter({
 })
 
 // Navigation guard
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   const isAuthenticated = authStore.isAuthenticated
+
+  // If route requires authentication, check token expiration
+  if (to.meta.requiresAuth && isAuthenticated) {
+    const isTokenValid = await authStore.checkTokenExpiration()
+
+    if (!isTokenValid) {
+      // Token expired and couldn't be refreshed
+      // The App.vue component will handle showing the session expired modal
+      // For now, just mark that we need to show it
+      sessionStorage.setItem('sessionExpired', 'true')
+      authStore.clearAuth()
+      next('/login')
+      return
+    }
+  }
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')

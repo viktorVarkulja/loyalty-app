@@ -415,8 +415,9 @@ class ReceiptProcessingService:
         )
 
         # Create transaction items
+        transaction_items = []
         for item_data in matched_items:
-            TransactionItem.objects.create(
+            item = TransactionItem.objects.create(
                 transaction=transaction,
                 product_id=item_data['product_id'],
                 product_name=item_data['product_name'],
@@ -426,10 +427,15 @@ class ReceiptProcessingService:
                 points=item_data['points'],
                 matched=item_data['matched']
             )
+            transaction_items.append(item)
 
         # Update user points
         user.points += total_points
         user.save()
+
+        # Serialize transaction items to include IDs
+        from .serializers import TransactionItemSerializer
+        serialized_items = TransactionItemSerializer(transaction_items, many=True).data
 
         return {
             'success': True,
@@ -440,8 +446,8 @@ class ReceiptProcessingService:
                 'location': store.location
             },
             'total_points': total_points,
-            'items': matched_items,
-            'unmatched_items': [item for item in matched_items if not item['matched']]
+            'items': serialized_items,
+            'unmatched_items': [item for item in serialized_items if not item['matched']]
         }
 
     @classmethod
@@ -516,8 +522,9 @@ class ReceiptProcessingService:
             )
 
             # Create transaction items
+            transaction_items = []
             for item_data in matched_items:
-                TransactionItem.objects.create(
+                item = TransactionItem.objects.create(
                     transaction=transaction,
                     product_id=item_data['product_id'],
                     product_name=item_data['product_name'],
@@ -526,10 +533,15 @@ class ReceiptProcessingService:
                     points=item_data['points'],
                     matched=item_data['matched']
                 )
+                transaction_items.append(item)
 
             # Update user points
             user.points += total_points
             user.save()
+
+            # Serialize transaction items to include IDs
+            from .serializers import TransactionItemSerializer
+            serialized_items = TransactionItemSerializer(transaction_items, many=True).data
 
             return {
                 'success': True,
@@ -540,8 +552,8 @@ class ReceiptProcessingService:
                     'location': store.location
                 },
                 'total_points': total_points,
-                'items': matched_items,
-                'unmatched_items': [item for item in matched_items if not item['matched']],
+                'items': serialized_items,
+                'unmatched_items': [item for item in serialized_items if not item['matched']],
                 'test_mode': True
             }
 

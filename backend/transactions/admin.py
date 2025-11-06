@@ -50,7 +50,7 @@ class TransactionItemAdmin(admin.ModelAdmin):
     list_filter = ['matched', 'review_status', 'review_requested_at']
     search_fields = ['transaction__id', 'product_name', 'product__name', 'transaction__user__email']
     ordering = ['-review_requested_at', '-transaction__scanned_at']
-    readonly_fields = ['id', 'transaction', 'product', 'product_name', 'quantity', 'price', 'unit_price', 'matched', 'review_requested_at']
+    readonly_fields = ['id', 'transaction', 'product', 'product_name', 'quantity', 'price', 'unit_price', 'matched', 'review_requested_at', 'points', 'review_status', 'review_notes']
     actions = ['approve_reviews', 'reject_reviews']
 
     fieldsets = (
@@ -85,39 +85,58 @@ class TransactionItemAdmin(admin.ModelAdmin):
         """Approve selected reviews and assign default points."""
         from products.models import Product
 
+        print(f"🔍 ADMIN DEBUG - approve_reviews called")
+        print(f"🔍 ADMIN DEBUG - Queryset count: {queryset.count()}")
+
         updated = 0
         for item in queryset.filter(review_status='pending'):
+            print(f"\n🔍 ADMIN DEBUG - Processing item: {item.product_name}")
+            print(f"🔍 ADMIN DEBUG - Item ID: {item.id}")
+            print(f"🔍 ADMIN DEBUG - Current item.product: {item.product}")
+            print(f"🔍 ADMIN DEBUG - Review status: {item.review_status}")
+
             # Create or get product in the database if not already linked
             if not item.product:
+                print(f"✅ ADMIN DEBUG - No product linked, creating/getting product")
                 product, created = Product.objects.get_or_create(
                     name=item.product_name,
                     defaults={
-                        'description': f'Auto-created from approved review',
                         'points': 10,
                         'status': 'ACTIVE'
                     }
                 )
+                print(f"🔍 ADMIN DEBUG - Product: {product.name}")
+                print(f"🔍 ADMIN DEBUG - Created new? {created}")
+                print(f"🔍 ADMIN DEBUG - Product ID: {product.id}")
                 item.product = product
+            else:
+                print(f"⚠️ ADMIN DEBUG - Product already linked: {item.product}")
 
             # Assign default 10 points and mark as matched
             item.review_status = 'approved'
             item.matched = True
             item.points = 10
             item.review_notes = 'Approved by admin'
+            print(f"🔍 ADMIN DEBUG - Saving item with matched=True, points=10")
             item.save()
 
             # Update user points
             user = item.transaction.user
+            old_points = user.points
             user.points += 10
             user.save()
+            print(f"🔍 ADMIN DEBUG - User {user.email}: {old_points} -> {user.points} points")
 
             # Update transaction total points
             transaction = item.transaction
+            old_total = transaction.total_points
             transaction.total_points += 10
             transaction.save()
+            print(f"🔍 ADMIN DEBUG - Transaction total: {old_total} -> {transaction.total_points} points")
 
             updated += 1
 
+        print(f"\n✅ ADMIN DEBUG - Completed! Updated {updated} items")
         self.message_user(request, f'{updated} review(s) approved. Products created and 10 points awarded per item.')
     approve_reviews.short_description = 'Approve selected reviews (10 points each)'
 

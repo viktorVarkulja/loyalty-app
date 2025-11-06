@@ -48,16 +48,21 @@ api.interceptors.response.use(
           const { access } = response.data
           localStorage.setItem('accessToken', access)
 
+          // If a new refresh token is provided, update it too (for token rotation)
+          if (response.data.refresh) {
+            localStorage.setItem('refreshToken', response.data.refresh)
+          }
+
           // Retry original request with new token
           originalRequest.headers.Authorization = `Bearer ${access}`
           return api(originalRequest)
         } else {
-          // No refresh token, redirect to login
-          handleLogout()
+          // No refresh token, show session expired modal
+          handleSessionExpired()
         }
       } catch (refreshError) {
-        // Refresh failed, clear auth and redirect to login
-        handleLogout()
+        // Refresh failed, show session expired modal
+        handleSessionExpired()
         return Promise.reject(refreshError)
       }
     }
@@ -66,17 +71,25 @@ api.interceptors.response.use(
   }
 )
 
-// Function to handle logout and redirect
-function handleLogout() {
+// Function to handle session expiration
+function handleSessionExpired() {
   // Clear all auth data from localStorage
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
   localStorage.removeItem('auth')
 
+  // Mark that session expired to show modal
+  sessionStorage.setItem('sessionExpired', 'true')
+
   // Redirect to login
   if (router.currentRoute.value.path !== '/login') {
     router.push('/login')
   }
+}
+
+// Function to handle logout and redirect (kept for compatibility)
+function handleLogout() {
+  handleSessionExpired()
 }
 
 export default api

@@ -231,23 +231,33 @@ def approve_review(request, item_id):
     product_id = request.data.get('product_id')
     admin_notes = request.data.get('notes', '')
 
+    print(f"🔍 DEBUG approve_review - Item: {item.product_name}")
+    print(f"🔍 DEBUG approve_review - Points: {points}")
+    print(f"🔍 DEBUG approve_review - product_id from request: {product_id}")
+    print(f"🔍 DEBUG approve_review - item.product (existing): {item.product}")
+
     # Create or get product in the database
     from products.models import Product
 
     if product_id:
+        print(f"✅ Branch 1: product_id provided = {product_id}")
+
         # Admin specified an existing product
         item.product_id = product_id
     elif not item.product:
+        print(f"✅ Branch 2: No product linked, creating new product")
         # Create a new product entry if not already linked
         product, created = Product.objects.get_or_create(
             name=item.product_name,
             defaults={
-                'description': f'Auto-created from approved review',
                 'points': points,
                 'status': 'ACTIVE'
             }
         )
+        print(f"🔍 Product created: {product.name}, Created new? {created}, ID: {product.id}")
         item.product = product
+    else:
+        print(f"⚠️ Branch 3: Product already linked - {item.product}")
 
     # Update item
     item.review_status = 'approved'
