@@ -231,13 +231,29 @@ def approve_review(request, item_id):
     product_id = request.data.get('product_id')
     admin_notes = request.data.get('notes', '')
 
+    # Create or get product in the database
+    from products.models import Product
+
+    if product_id:
+        # Admin specified an existing product
+        item.product_id = product_id
+    elif not item.product:
+        # Create a new product entry if not already linked
+        product, created = Product.objects.get_or_create(
+            name=item.product_name,
+            defaults={
+                'description': f'Auto-created from approved review',
+                'points': points,
+                'status': 'ACTIVE'
+            }
+        )
+        item.product = product
+
     # Update item
     item.review_status = 'approved'
+    item.matched = True  # Mark as matched when approved
     item.points = points
     item.review_notes = admin_notes
-    if product_id:
-        item.product_id = product_id
-        item.matched = True
     item.save()
 
     # Update user points
@@ -252,7 +268,7 @@ def approve_review(request, item_id):
 
     return Response({
         'success': True,
-        'message': f'Review approved. {points} points awarded to user.',
+        'message': f'Review approved. Product created/linked and {points} points awarded to user.',
         'item': TransactionItemSerializer(item).data
     })
 

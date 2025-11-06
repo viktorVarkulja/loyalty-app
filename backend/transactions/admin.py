@@ -83,10 +83,25 @@ class TransactionItemAdmin(admin.ModelAdmin):
 
     def approve_reviews(self, request, queryset):
         """Approve selected reviews and assign default points."""
+        from products.models import Product
+
         updated = 0
         for item in queryset.filter(review_status='pending'):
-            # Assign default 10 points
+            # Create or get product in the database if not already linked
+            if not item.product:
+                product, created = Product.objects.get_or_create(
+                    name=item.product_name,
+                    defaults={
+                        'description': f'Auto-created from approved review',
+                        'points': 10,
+                        'status': 'ACTIVE'
+                    }
+                )
+                item.product = product
+
+            # Assign default 10 points and mark as matched
             item.review_status = 'approved'
+            item.matched = True
             item.points = 10
             item.review_notes = 'Approved by admin'
             item.save()
@@ -103,7 +118,7 @@ class TransactionItemAdmin(admin.ModelAdmin):
 
             updated += 1
 
-        self.message_user(request, f'{updated} review(s) approved. 10 points awarded per item.')
+        self.message_user(request, f'{updated} review(s) approved. Products created and 10 points awarded per item.')
     approve_reviews.short_description = 'Approve selected reviews (10 points each)'
 
     def reject_reviews(self, request, queryset):

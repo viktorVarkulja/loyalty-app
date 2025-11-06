@@ -289,22 +289,23 @@ class ReceiptProcessingService:
     @staticmethod
     def match_product_by_name(product_name: str, products_db) -> Tuple[Optional[object], int]:
         """
-        Match a product from receipt with products in database.
+        Match a product from receipt with products in database or previously approved items.
         Returns (matched_product, points) or (None, 0).
         Uses fuzzy matching for better results.
         """
         from products.models import Product
+        from .models import TransactionItem
         from difflib import SequenceMatcher
 
         # Normalize product name
         normalized_name = product_name.lower().strip()
 
-        # First, try exact match
+        # First, try exact match in Product database
         exact_match = products_db.filter(name__iexact=normalized_name, status='ACTIVE').first()
         if exact_match:
             return exact_match, exact_match.points
 
-        # Try partial match (product name contains search term or vice versa)
+        # Try partial match in Product database
         for product in products_db.filter(status='ACTIVE'):
             product_name_lower = product.name.lower()
 
@@ -339,6 +340,21 @@ class ReceiptProcessingService:
             return {
                 'success': False,
                 'error': 'Invalid QR code - could not extract receipt URL'
+            }
+
+        # Check if this receipt has already been scanned by this user
+        existing_transaction = Transaction.objects.filter(
+            user=user,
+            receipt_url=receipt_url
+        ).first()
+
+        if existing_transaction:
+            return {
+                'success': False,
+                'error': 'This receipt has already been scanned',
+                'already_scanned': True,
+                'scanned_at': existing_transaction.scanned_at.isoformat(),
+                'points_earned': existing_transaction.total_points
             }
 
         # Fetch receipt data from Serbian fiscal system

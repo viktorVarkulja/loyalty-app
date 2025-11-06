@@ -31,10 +31,10 @@
         <!-- Camera View -->
         <div v-if="isScanning" class="bg-white rounded-2xl overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.1)] relative">
           <qrcode-stream
-            @detect="onDecode"
+            @detect="onDetect"
             @error="onError"
             @camera-on="onCameraOn"
-            @camera-off="onCameraOff"
+            @init="onInit"
             :track="paintBoundingBox"
           >
             <div class="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center pointer-events-none">
@@ -135,10 +135,12 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { QrcodeStream } from 'qrcode-reader-vue3'
+import { QrcodeStream } from 'vue-qrcode-reader'
 import { receiptsService } from '../services'
 import { useAuthStore } from '../stores/auth'
 import MainLayout from '../components/MainLayout.vue'
+// Import barcode-detector polyfill for better browser compatibility
+import 'barcode-detector'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -151,19 +153,30 @@ const showManualInput = ref(false)
 const manualQrData = ref('')
 
 const startScanner = () => {
+  console.log('Starting scanner...')
   isScanning.value = true
   errorMessage.value = ''
   scanResult.value = null
+  console.log('Scanner state:', { isScanning: isScanning.value })
 }
 
 const stopScanner = () => {
   isScanning.value = false
 }
 
-const onDecode = async (detectedCodes) => {
+const onDetect = async (detectedCodes) => {
+  console.log('🔍 DETECT EVENT FIRED!', detectedCodes)
+  console.log('Detected codes count:', detectedCodes?.length)
+  console.log('Is processing:', isProcessing.value)
+
   if (detectedCodes && detectedCodes.length > 0 && !isProcessing.value) {
     const qrData = detectedCodes[0].rawValue
+    console.log('✅ Processing QR data:', qrData)
     await processQrCode(qrData)
+  } else if (!detectedCodes || detectedCodes.length === 0) {
+    console.log('⚠️ No codes in detection event')
+  } else if (isProcessing.value) {
+    console.log('⚠️ Already processing, skipping')
   }
 }
 
@@ -174,11 +187,39 @@ const onError = (error) => {
 }
 
 const onCameraOn = () => {
-  console.log('Camera is on')
+  console.log('📷 Camera is on - ready to scan')
+
+  // Check if BarcodeDetector API is available
+  if ('BarcodeDetector' in window) {
+    console.log('✅ BarcodeDetector API is supported')
+    BarcodeDetector.getSupportedFormats().then(formats => {
+      console.log('Supported barcode formats:', formats)
+    })
+  } else {
+    console.warn('⚠️ BarcodeDetector API is NOT supported in this browser!')
+    console.log('Library will use fallback detection method')
+  }
 }
 
-const onCameraOff = () => {
-  console.log('Camera is off')
+const onInit = async (promise) => {
+  console.log('Initializing camera...')
+  try {
+    await promise
+    console.log('Camera initialized successfully')
+  } catch (error) {
+    console.error('Camera initialization failed:', error)
+    if (error.name === 'NotAllowedError') {
+      errorMessage.value = 'Camera access denied. Please allow camera access.'
+    } else if (error.name === 'NotFoundError') {
+      errorMessage.value = 'No camera found on this device.'
+    } else if (error.name === 'NotSupportedError') {
+      errorMessage.value = 'Secure context required (HTTPS, localhost, etc.)'
+    } else if (error.name === 'NotReadableError') {
+      errorMessage.value = 'Camera is already in use.'
+    } else {
+      errorMessage.value = 'Camera error: ' + error.message
+    }
+  }
 }
 
 const paintBoundingBox = (detectedCodes, ctx) => {
@@ -200,19 +241,56 @@ const processQrCode = async (qrData) => {
 
   try {
     const result = await receiptsService.scanReceipt(qrData)
+    console.log('API Response:', result)
 
     if (result.success) {
-      scanResult.value = result.transaction
+      // Backend returns data at root level, not nested in transaction
+      scanResult.value = {
+        total_points: result.total_points,
+        store_name: result.store?.name,
+        total_amount: result.items?.reduce((sum, item) => sum + (item.price || 0), 0) || 0,
+        matched_items: result.items?.filter(item => item.matched).length || 0,
+        total_items: result.items?.length || 0,
+        scanned_at: new Date().toISOString(),
+        items: result.items
+      }
+
       // Update points in auth store
       if (authStore.user) {
-        authStore.updatePoints(authStore.user.points + result.transaction.total_points)
+        authStore.updatePoints(authStore.user.points + result.total_points)
       }
     } else {
-      errorMessage.value = result.error || 'Failed to process receipt'
+      // Handle duplicate receipt with more detailed message
+      if (result.already_scanned) {
+        const scannedDate = new Date(result.scanned_at)
+        errorMessage.value = `This receipt was already scanned on ${scannedDate.toLocaleDateString('sr-RS', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}. You earned ${result.points_earned} points from that scan.`
+      } else {
+        errorMessage.value = result.error || 'Failed to process receipt'
+      }
     }
   } catch (error) {
     console.error('Failed to process receipt:', error)
-    errorMessage.value = error.response?.data?.error || 'An error occurred while processing the receipt'
+    const errorData = error.response?.data
+
+    // Handle duplicate receipt error from API
+    if (errorData?.already_scanned) {
+      const scannedDate = new Date(errorData.scanned_at)
+      errorMessage.value = `This receipt was already scanned on ${scannedDate.toLocaleDateString('sr-RS', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}. You earned ${errorData.points_earned} points from that scan.`
+    } else {
+      errorMessage.value = errorData?.error || 'An error occurred while processing the receipt'
+    }
   } finally {
     isProcessing.value = false
   }
