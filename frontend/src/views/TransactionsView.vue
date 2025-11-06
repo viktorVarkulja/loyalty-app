@@ -1,67 +1,67 @@
 <template>
   <MainLayout>
-    <div class="transactions">
+    <div class="min-h-screen bg-gray-100 pb-20">
       <!-- Header -->
-      <div class="header">
-        <h1>Transaction History</h1>
-        <p>View all your receipt scans and earned points</p>
+      <div class="bg-gradient-to-br from-primary to-primary-dark text-white py-8 px-5">
+        <h1 class="m-0 mb-2 text-[28px] font-bold">Transaction History</h1>
+        <p class="m-0 opacity-90 text-base">View all your receipt scans and earned points</p>
       </div>
 
       <!-- Stats Card -->
-      <div class="stats-card">
-        <div class="stat-item">
-          <div class="stat-icon total">
+      <div class="bg-white -mt-8 mx-5 mb-5 p-5 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex gap-4">
+        <div class="flex-1 flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0 bg-gradient-to-br from-primary to-primary-dark">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="9" y1="3" x2="9" y2="21"></line>
               <line x1="15" y1="3" x2="15" y2="21"></line>
             </svg>
           </div>
-          <div class="stat-info">
-            <p class="stat-label">Total Scans</p>
-            <p class="stat-value">{{ totalCount }}</p>
+          <div class="flex-1">
+            <p class="m-0 mb-1 text-xs text-gray-400 font-medium uppercase">Total Scans</p>
+            <p class="m-0 text-2xl font-bold text-gray-800">{{ totalCount }}</p>
           </div>
         </div>
-        <div class="stat-item">
-          <div class="stat-icon points">
+        <div class="flex-1 flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0 bg-gradient-to-br from-warning to-amber-600">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
           </div>
-          <div class="stat-info">
-            <p class="stat-label">Total Points</p>
-            <p class="stat-value">{{ totalPoints }}</p>
+          <div class="flex-1">
+            <p class="m-0 mb-1 text-xs text-gray-400 font-medium uppercase">Total Points</p>
+            <p class="m-0 text-2xl font-bold text-gray-800">{{ totalPoints }}</p>
           </div>
         </div>
       </div>
 
       <!-- Loading State -->
-      <div v-if="isLoading" class="loading">
-        <div class="spinner"></div>
+      <div v-if="isLoading" class="text-center py-[60px] px-5 text-gray-400">
+        <div class="w-10 h-10 border-4 border-gray-100 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
         <p>Loading transactions...</p>
       </div>
 
       <!-- Transactions List -->
-      <div v-else-if="transactions.length > 0" class="transactions-list">
+      <div v-else-if="transactions.length > 0" class="pb-5 flex flex-col gap-3">
         <div
           v-for="transaction in transactions"
           :key="transaction.id"
-          class="transaction-card"
+          class="bg-white rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 cursor-pointer mx-5 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
           @click="selectTransaction(transaction)"
         >
-          <div class="transaction-main">
-            <div class="transaction-icon">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-success to-green-600 rounded-xl flex items-center justify-center text-white shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
                 <path d="M16 10a4 4 0 0 1-8 0"></path>
               </svg>
             </div>
-            <div class="transaction-info">
-              <h3>{{ transaction.store_name || 'Unknown Store' }}</h3>
-              <p class="transaction-date">{{ formatDate(transaction.scanned_at) }}</p>
-              <div class="transaction-meta">
-                <span class="meta-item">
+            <div class="flex-1 min-w-0">
+              <h3 class="m-0 mb-1 text-base font-semibold text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis">{{ transaction.store_name || 'Unknown Store' }}</h3>
+              <p class="m-0 mb-2 text-[13px] text-gray-400">{{ formatDate(transaction.scanned_at) }}</p>
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-gray-500 flex items-center gap-1">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="9" cy="21" r="1"></circle>
                     <circle cx="20" cy="21" r="1"></circle>
@@ -69,13 +69,13 @@
                   </svg>
                   {{ transaction.total_items }} items
                 </span>
-                <span class="meta-item">
+                <span class="text-xs text-gray-500">
                   {{ formatCurrency(transaction.total_amount) }}
                 </span>
               </div>
             </div>
-            <div class="transaction-points">
-              <div class="points-badge">
+            <div class="shrink-0">
+              <div class="bg-gradient-to-br from-primary to-primary-dark text-white py-1.5 px-3 rounded-2xl flex items-center gap-1 font-semibold text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                 </svg>
@@ -87,34 +87,34 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="empty-state">
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div v-else class="text-center py-[60px] px-5 text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-5 opacity-30 inline-block">
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="9" y1="3" x2="9" y2="21"></line>
           <line x1="15" y1="3" x2="15" y2="21"></line>
         </svg>
-        <h3>No transactions yet</h3>
-        <p>Start scanning receipts to see your history here</p>
-        <router-link to="/scan" class="btn-primary">Scan Your First Receipt</router-link>
+        <h3 class="m-0 mb-2 text-xl text-gray-800">No transactions yet</h3>
+        <p class="m-0 mb-6 text-sm">Start scanning receipts to see your history here</p>
+        <router-link to="/scan" class="inline-block py-3 px-6 bg-gradient-to-br from-primary to-primary-dark text-white no-underline rounded-lg font-semibold transition-transform duration-200 hover:-translate-y-0.5">Scan Your First Receipt</router-link>
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="pagination">
+      <div v-if="totalPages > 1" class="py-5 px-5 flex items-center justify-between gap-4">
         <button
           @click="previousPage"
           :disabled="currentPage === 1"
-          class="page-btn"
+          class="py-2.5 px-5 bg-white text-primary border-2 border-primary rounded-lg font-semibold cursor-pointer transition-all duration-200 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary hover:text-white"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
           Previous
         </button>
-        <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+        <span class="text-sm text-gray-500 font-medium">Page {{ currentPage }} of {{ totalPages }}</span>
         <button
           @click="nextPage"
           :disabled="currentPage === totalPages"
-          class="page-btn"
+          class="py-2.5 px-5 bg-white text-primary border-2 border-primary rounded-lg font-semibold cursor-pointer transition-all duration-200 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary hover:text-white"
         >
           Next
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -124,11 +124,11 @@
       </div>
 
       <!-- Transaction Detail Modal -->
-      <div v-if="selectedTransaction" class="modal-overlay" @click="closeModal">
-        <div class="modal-content" @click.stop>
-          <div class="modal-header">
-            <h2>Transaction Details</h2>
-            <button @click="closeModal" class="close-btn">
+      <div v-if="selectedTransaction" class="fixed top-0 left-0 right-0 bottom-0 bg-black/50 flex items-center justify-center z-[1000] p-5" @click="closeModal">
+        <div class="bg-white rounded-2xl max-w-[500px] w-full max-h-[80vh] overflow-y-auto shadow-[0_20px_60px_rgba(0,0,0,0.3)]" @click.stop>
+          <div class="p-5 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-[1]">
+            <h2 class="m-0 text-xl font-bold text-gray-800">Transaction Details</h2>
+            <button @click="closeModal" class="bg-none border-none cursor-pointer text-gray-400 p-1 flex items-center justify-center rounded-md transition-all duration-200 hover:bg-gray-100 hover:text-gray-800">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -136,38 +136,38 @@
             </button>
           </div>
 
-          <div class="modal-body">
-            <div class="detail-section">
-              <h3>Receipt Information</h3>
-              <div class="detail-row">
-                <span class="label">Store</span>
-                <span class="value">{{ selectedTransaction.store_name || 'Unknown Store' }}</span>
+          <div class="p-5">
+            <div class="mb-6">
+              <h3 class="m-0 mb-4 text-base font-semibold text-gray-800">Receipt Information</h3>
+              <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                <span class="text-sm text-gray-400 font-medium">Store</span>
+                <span class="text-[15px] text-gray-800 font-semibold text-right">{{ selectedTransaction.store_name || 'Unknown Store' }}</span>
               </div>
-              <div class="detail-row">
-                <span class="label">Date & Time</span>
-                <span class="value">{{ formatDate(selectedTransaction.scanned_at) }}</span>
+              <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                <span class="text-sm text-gray-400 font-medium">Date & Time</span>
+                <span class="text-[15px] text-gray-800 font-semibold text-right">{{ formatDate(selectedTransaction.scanned_at) }}</span>
               </div>
-              <div class="detail-row">
-                <span class="label">Total Amount</span>
-                <span class="value">{{ formatCurrency(selectedTransaction.total_amount) }}</span>
+              <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                <span class="text-sm text-gray-400 font-medium">Total Amount</span>
+                <span class="text-[15px] text-gray-800 font-semibold text-right">{{ formatCurrency(selectedTransaction.total_amount) }}</span>
               </div>
-              <div class="detail-row">
-                <span class="label">Points Earned</span>
-                <span class="value points-highlight">+{{ selectedTransaction.total_points }}</span>
+              <div class="flex justify-between items-center py-3">
+                <span class="text-sm text-gray-400 font-medium">Points Earned</span>
+                <span class="text-[15px] text-primary font-semibold text-right">+{{ selectedTransaction.total_points }}</span>
               </div>
             </div>
 
-            <div class="detail-section" v-if="selectedTransaction.items && selectedTransaction.items.length > 0">
-              <h3>Items ({{ selectedTransaction.total_items }})</h3>
-              <div class="items-list">
-                <div v-for="item in selectedTransaction.items" :key="item.id" class="item-row">
-                  <div class="item-info">
-                    <p class="item-name">{{ item.product_name }}</p>
-                    <p class="item-meta">{{ item.quantity }}x {{ formatCurrency(item.unit_price) }}</p>
+            <div class="mb-0" v-if="selectedTransaction.items && selectedTransaction.items.length > 0">
+              <h3 class="m-0 mb-4 text-base font-semibold text-gray-800">Items ({{ selectedTransaction.total_items }})</h3>
+              <div class="flex flex-col gap-3">
+                <div v-for="item in selectedTransaction.items" :key="item.id" class="flex justify-between items-start p-3 bg-gray-50 rounded-lg">
+                  <div class="flex-1 min-w-0">
+                    <p class="m-0 mb-1 text-sm font-semibold text-gray-800">{{ item.product_name }}</p>
+                    <p class="m-0 text-xs text-gray-400">{{ item.quantity }}x {{ formatCurrency(item.unit_price) }}</p>
                   </div>
-                  <div class="item-total">
-                    <p class="item-amount">{{ formatCurrency(item.total_price) }}</p>
-                    <p class="item-points" v-if="item.points_earned > 0">+{{ item.points_earned }} pts</p>
+                  <div class="text-right ml-3">
+                    <p class="m-0 mb-1 text-sm font-semibold text-gray-800">{{ formatCurrency(item.total_price) }}</p>
+                    <p class="m-0 text-xs text-primary font-semibold" v-if="item.points_earned > 0">+{{ item.points_earned }} pts</p>
                   </div>
                 </div>
               </div>
@@ -270,432 +270,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.transactions {
-  min-height: 100vh;
-  background-color: #f5f5f5;
-  padding-bottom: 80px;
-}
-
-.header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 30px 20px;
-}
-
-.header h1 {
-  margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.header p {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 16px;
-}
-
-.stats-card {
-  background: white;
-  margin: -30px 20px 20px;
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  display: flex;
-  gap: 16px;
-}
-
-.stat-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  flex-shrink: 0;
-}
-
-.stat-icon.total {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.stat-icon.points {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-label {
-  margin: 0 0 4px 0;
-  font-size: 12px;
-  color: #9ca3af;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-.stat-value {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-}
-
-.loading {
-  text-align: center;
-  padding: 60px 20px;
-  color: #9ca3af;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f4f6;
-  border-top-color: #667eea;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
-}
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-.transactions-list {
-  padding: 0 0 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.transaction-card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-  margin: 0 20px;
-}
-
-.transaction-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.transaction-main {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.transaction-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  flex-shrink: 0;
-}
-
-.transaction-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.transaction-info h3 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.transaction-date {
-  margin: 0 0 8px 0;
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-.transaction-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.meta-item {
-  font-size: 12px;
-  color: #6b7280;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.transaction-points {
-  flex-shrink: 0;
-}
-
-.points-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #9ca3af;
-}
-
-.empty-state svg {
-  margin-bottom: 20px;
-  opacity: 0.3;
-}
-
-.empty-state h3 {
-  margin: 0 0 8px 0;
-  font-size: 20px;
-  color: #333;
-}
-
-.empty-state p {
-  margin: 0 0 24px 0;
-  font-size: 14px;
-}
-
-.btn-primary {
-  display: inline-block;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: transform 0.2s;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-}
-
-.pagination {
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.page-btn {
-  padding: 10px 20px;
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.page-btn:hover:not(:disabled) {
-  background: #667eea;
-  color: white;
-}
-
-.page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.page-info {
-  font-size: 14px;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 16px;
-  max-width: 500px;
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  background: white;
-  z-index: 1;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: #333;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #9ca3af;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-.close-btn:hover {
-  background: #f3f4f6;
-  color: #333;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.detail-section {
-  margin-bottom: 24px;
-}
-
-.detail-section:last-child {
-  margin-bottom: 0;
-}
-
-.detail-section h3 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.detail-row:last-child {
-  border-bottom: none;
-}
-
-.detail-row .label {
-  font-size: 14px;
-  color: #9ca3af;
-  font-weight: 500;
-}
-
-.detail-row .value {
-  font-size: 15px;
-  color: #333;
-  font-weight: 600;
-  text-align: right;
-}
-
-.points-highlight {
-  color: #667eea;
-}
-
-.items-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.item-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 12px;
-  background: #f9fafb;
-  border-radius: 8px;
-}
-
-.item-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.item-name {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
-
-.item-meta {
-  margin: 0;
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.item-total {
-  text-align: right;
-  margin-left: 12px;
-}
-
-.item-amount {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
-
-.item-points {
-  margin: 0;
-  font-size: 12px;
-  color: #667eea;
-  font-weight: 600;
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 </style>

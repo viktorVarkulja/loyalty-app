@@ -1,16 +1,16 @@
 <template>
   <MainLayout>
-    <div class="products">
+    <div class="min-h-screen bg-gray-100">
       <!-- Header -->
-      <div class="header">
-        <h1>Products</h1>
-        <p>Browse products and see how many points you can earn</p>
+      <div class="bg-gradient-to-br from-primary to-primary-dark text-white py-8 px-5">
+        <h1 class="m-0 mb-2 text-[28px] font-bold">Products</h1>
+        <p class="m-0 opacity-90 text-base">Browse products and see how many points you can earn</p>
       </div>
 
       <!-- Search Bar -->
-      <div class="search-container">
-        <div class="search-box">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="p-5 -mt-5">
+        <div class="bg-white rounded-xl py-3 px-4 flex items-center gap-3 shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 shrink-0">
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
           </svg>
@@ -19,8 +19,9 @@
             @input="handleSearch"
             type="text"
             placeholder="Search products..."
+            class="flex-1 border-none outline-none text-base text-gray-800 placeholder:text-gray-400"
           />
-          <button v-if="searchQuery" @click="clearSearch" class="clear-btn">
+          <button v-if="searchQuery" @click="clearSearch" class="bg-gray-100 border-none rounded-full w-7 h-7 flex items-center justify-center cursor-pointer text-gray-500 transition-colors hover:bg-gray-200">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -30,35 +31,35 @@
       </div>
 
       <!-- Loading State -->
-      <div v-if="isLoading" class="loading">
-        <div class="spinner"></div>
+      <div v-if="isLoading" class="text-center py-[60px] px-5 text-gray-400">
+        <div class="w-10 h-10 border-4 border-gray-100 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
         <p>Loading products...</p>
       </div>
 
       <!-- Products List -->
-      <div v-else-if="displayedProducts.length > 0" class="products-list">
+      <div v-else-if="displayedProducts.length > 0" class="pb-5 px-5 flex flex-col gap-3">
         <div
           v-for="product in displayedProducts"
           :key="product.id"
-          class="product-card"
+          class="bg-white rounded-xl p-4 flex items-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
         >
-          <div class="product-icon">
+          <div class="w-14 h-14 bg-gradient-to-br from-success to-green-600 rounded-xl flex items-center justify-center text-white shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
               <line x1="3" y1="6" x2="21" y2="6"></line>
               <path d="M16 10a4 4 0 0 1-8 0"></path>
             </svg>
           </div>
-          <div class="product-info">
-            <h3>{{ product.name }}</h3>
-            <div class="product-meta">
-              <span class="status" :class="product.status.toLowerCase()">
+          <div class="flex-1 min-w-0">
+            <h3 class="m-0 mb-2 text-base font-semibold text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis">{{ product.name }}</h3>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium py-1 px-2 rounded-md uppercase" :class="product.status.toLowerCase() === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
                 {{ product.status }}
               </span>
             </div>
           </div>
-          <div class="product-points">
-            <div class="points-badge">
+          <div class="shrink-0">
+            <div class="bg-gradient-to-br from-primary to-primary-dark text-white py-2 px-4 rounded-[20px] flex items-center gap-1.5 font-semibold text-base">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
               </svg>
@@ -69,33 +70,33 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="empty-state">
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div v-else class="text-center py-[60px] px-5 text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-5 opacity-30 inline-block">
           <circle cx="11" cy="11" r="8"></circle>
           <path d="m21 21-4.35-4.35"></path>
         </svg>
-        <h3>No products found</h3>
-        <p v-if="searchQuery">Try searching for something else</p>
-        <p v-else>No products available at the moment</p>
-        <button v-if="searchQuery" @click="clearSearch" class="btn-primary">
+        <h3 class="m-0 mb-2 text-xl text-gray-800">No products found</h3>
+        <p v-if="searchQuery" class="m-0 mb-6 text-sm">Try searching for something else</p>
+        <p v-else class="m-0 mb-6 text-sm">No products available at the moment</p>
+        <button v-if="searchQuery" @click="clearSearch" class="py-3 px-6 bg-gradient-to-br from-primary to-primary-dark text-white border-none rounded-lg font-semibold cursor-pointer transition-transform duration-200 hover:-translate-y-0.5">
           Clear Search
         </button>
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1 && !searchQuery" class="pagination">
+      <div v-if="totalPages > 1 && !searchQuery" class="py-5 px-5 flex items-center justify-between gap-4">
         <button
           @click="previousPage"
           :disabled="currentPage === 1"
-          class="page-btn"
+          class="py-2.5 px-5 bg-white text-primary border-2 border-primary rounded-lg font-semibold cursor-pointer transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary hover:text-white"
         >
           Previous
         </button>
-        <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+        <span class="text-sm text-gray-500 font-medium">Page {{ currentPage }} of {{ totalPages }}</span>
         <button
           @click="nextPage"
           :disabled="currentPage === totalPages"
-          class="page-btn"
+          class="py-2.5 px-5 bg-white text-primary border-2 border-primary rounded-lg font-semibold cursor-pointer transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary hover:text-white"
         >
           Next
         </button>
@@ -177,260 +178,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.products {
-  min-height: 100vh;
-  background-color: #f5f5f5;
-}
-
-.header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 30px 20px;
-}
-
-.header h1 {
-  margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.header p {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 16px;
-}
-
-.search-container {
-  padding: 20px;
-  margin-top: -20px;
-}
-
-.search-box {
-  background: white;
-  border-radius: 12px;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.search-box svg {
-  color: #9ca3af;
-  flex-shrink: 0;
-}
-
-.search-box input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 16px;
-  color: #333;
-}
-
-.search-box input::placeholder {
-  color: #9ca3af;
-}
-
-.clear-btn {
-  background: #f3f4f6;
-  border: none;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #6b7280;
-  transition: background-color 0.2s;
-}
-
-.clear-btn:hover {
-  background: #e5e7eb;
-}
-
-.loading {
-  text-align: center;
-  padding: 60px 20px;
-  color: #9ca3af;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f4f6;
-  border-top-color: #667eea;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
-}
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-.products-list {
-  padding: 0 20px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.product-card {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.product-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.product-icon {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  flex-shrink: 0;
-}
-
-.product-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.product-info h3 {
-  margin: 0 0 8px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.product-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status {
-  font-size: 12px;
-  font-weight: 500;
-  padding: 4px 8px;
-  border-radius: 6px;
-  text-transform: uppercase;
-}
-
-.status.active {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status.inactive {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.product-points {
-  flex-shrink: 0;
-}
-
-.points-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #9ca3af;
-}
-
-.empty-state svg {
-  margin-bottom: 20px;
-  opacity: 0.3;
-}
-
-.empty-state h3 {
-  margin: 0 0 8px 0;
-  font-size: 20px;
-  color: #333;
-}
-
-.empty-state p {
-  margin: 0 0 24px 0;
-  font-size: 14px;
-}
-
-.btn-primary {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-}
-
-.pagination {
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.page-btn {
-  padding: 10px 20px;
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.page-btn:hover:not(:disabled) {
-  background: #667eea;
-  color: white;
-}
-
-.page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.page-info {
-  font-size: 14px;
-  color: #6b7280;
-  font-weight: 500;
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 </style>

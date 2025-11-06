@@ -1,94 +1,94 @@
 <template>
   <MainLayout>
-    <div class="home">
+    <div class="min-h-screen bg-gray-100">
       <!-- Header -->
-      <div class="header">
-        <div class="greeting">
-          <h1>Hello, {{ authStore.userName }}!</h1>
-          <p>Welcome back to your loyalty dashboard</p>
+      <div class="bg-gradient-to-br from-primary to-primary-dark text-white py-8 px-5">
+        <div>
+          <h1 class="m-0 mb-2 text-[28px] font-bold">Hello, {{ authStore.userName }}!</h1>
+          <p class="m-0 opacity-90 text-base">Welcome back to your loyalty dashboard</p>
         </div>
       </div>
 
       <!-- Points Card -->
-      <div class="points-card">
-        <div class="points-icon">
+      <div class="bg-white -mt-8 mx-5 mb-5 p-6 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex items-center gap-5">
+        <div class="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center text-white">
           <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
         </div>
-        <div class="points-content">
-          <p class="points-label">Your Points</p>
-          <h2 class="points-value">{{ pointsBalance }}</h2>
+        <div class="flex-1">
+          <p class="m-0 text-sm text-gray-400 font-medium">Your Points</p>
+          <h2 class="mt-1 mb-0 text-4xl font-bold text-primary">{{ pointsBalance }}</h2>
         </div>
       </div>
 
       <!-- Quick Actions -->
-      <div class="quick-actions">
-        <h3>Quick Actions</h3>
-        <div class="actions-grid">
-          <router-link to="/scan" class="action-card">
-            <div class="action-icon scan">
+      <div class="p-5">
+        <h3 class="m-0 mb-4 text-lg font-semibold text-gray-800">Quick Actions</h3>
+        <div class="grid grid-cols-3 gap-3">
+          <router-link to="/scan" class="bg-white p-5 rounded-xl no-underline flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]">
+            <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-primary to-primary-dark">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="9" y1="3" x2="9" y2="21"></line>
                 <line x1="15" y1="3" x2="15" y2="21"></line>
               </svg>
             </div>
-            <span>Scan Receipt</span>
+            <span class="text-[13px] font-medium text-gray-800 text-center">Scan Receipt</span>
           </router-link>
 
-          <router-link to="/products" class="action-card">
-            <div class="action-icon products">
+          <router-link to="/products" class="bg-white p-5 rounded-xl no-underline flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]">
+            <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-success to-green-600">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="9" cy="21" r="1"></circle>
                 <circle cx="20" cy="21" r="1"></circle>
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
               </svg>
             </div>
-            <span>View Products</span>
+            <span class="text-[13px] font-medium text-gray-800 text-center">View Products</span>
           </router-link>
 
-          <router-link to="/transactions" class="action-card">
-            <div class="action-icon history">
+          <router-link to="/transactions" class="bg-white p-5 rounded-xl no-underline flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]">
+            <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-warning to-amber-600">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="1" x2="12" y2="23"></line>
                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
               </svg>
             </div>
-            <span>Transaction History</span>
+            <span class="text-[13px] font-medium text-gray-800 text-center">Transaction History</span>
           </router-link>
         </div>
       </div>
 
       <!-- Recent Activity -->
-      <div class="recent-activity" v-if="recentTransactions.length > 0">
-        <h3>Recent Activity</h3>
-        <div class="activity-list">
-          <div v-for="transaction in recentTransactions" :key="transaction.id" class="activity-item">
-            <div class="activity-icon">
+      <div class="p-5" v-if="recentTransactions.length > 0">
+        <h3 class="m-0 mb-4 text-lg font-semibold text-gray-800">Recent Activity</h3>
+        <div class="bg-white rounded-xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+          <div v-for="transaction in recentTransactions" :key="transaction.id" class="flex items-center gap-4 p-4 border-b border-gray-100 last:border-b-0">
+            <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center text-green-600">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </div>
-            <div class="activity-details">
-              <p class="activity-title">Receipt Scanned</p>
-              <p class="activity-date">{{ formatDate(transaction.scanned_at) }}</p>
+            <div class="flex-1">
+              <p class="m-0 mb-1 text-[15px] font-medium text-gray-800">Receipt Scanned</p>
+              <p class="m-0 text-[13px] text-gray-400">{{ formatDate(transaction.scanned_at) }}</p>
             </div>
-            <div class="activity-points">+{{ transaction.total_points }}</div>
+            <div class="text-base font-semibold text-green-600">+{{ transaction.total_points }}</div>
           </div>
         </div>
       </div>
 
       <!-- Empty State -->
-      <div class="empty-state" v-else>
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="py-[60px] px-5 text-center text-gray-400" v-else>
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-5 opacity-30 inline-block">
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="9" y1="3" x2="9" y2="21"></line>
           <line x1="15" y1="3" x2="15" y2="21"></line>
         </svg>
-        <h3>No activity yet</h3>
-        <p>Start scanning receipts to earn points!</p>
-        <router-link to="/scan" class="btn-primary">Scan Your First Receipt</router-link>
+        <h3 class="m-0 mb-2 text-xl text-gray-800">No activity yet</h3>
+        <p class="m-0 mb-6 text-sm">Start scanning receipts to earn points!</p>
+        <router-link to="/scan" class="inline-block py-3 px-6 bg-gradient-to-br from-primary to-primary-dark text-white no-underline rounded-lg font-semibold transition-transform duration-200 hover:-translate-y-0.5">Scan Your First Receipt</router-link>
       </div>
     </div>
   </MainLayout>
@@ -146,233 +146,3 @@ onMounted(async () => {
   isLoading.value = false
 })
 </script>
-
-<style scoped>
-.home {
-  min-height: 100vh;
-  background-color: #f5f5f5;
-}
-
-.header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 30px 20px;
-}
-
-.greeting h1 {
-  margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.greeting p {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 16px;
-}
-
-.points-card {
-  background: white;
-  margin: -30px 20px 20px;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.points-icon {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.points-content {
-  flex: 1;
-}
-
-.points-label {
-  margin: 0;
-  font-size: 14px;
-  color: #9ca3af;
-  font-weight: 500;
-}
-
-.points-value {
-  margin: 4px 0 0 0;
-  font-size: 36px;
-  font-weight: 700;
-  color: #667eea;
-}
-
-.quick-actions {
-  padding: 20px;
-}
-
-.quick-actions h3 {
-  margin: 0 0 16px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-.action-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.action-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.action-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.action-icon.scan {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.action-icon.products {
-  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-}
-
-.action-icon.history {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-}
-
-.action-card span {
-  font-size: 13px;
-  font-weight: 500;
-  color: #333;
-  text-align: center;
-}
-
-.recent-activity {
-  padding: 20px;
-}
-
-.recent-activity h3 {
-  margin: 0 0 16px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.activity-list {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.activity-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.activity-item:last-child {
-  border-bottom: none;
-}
-
-.activity-icon {
-  width: 40px;
-  height: 40px;
-  background: #e8f5e9;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #22c55e;
-}
-
-.activity-details {
-  flex: 1;
-}
-
-.activity-title {
-  margin: 0 0 4px 0;
-  font-size: 15px;
-  font-weight: 500;
-  color: #333;
-}
-
-.activity-date {
-  margin: 0;
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-.activity-points {
-  font-size: 16px;
-  font-weight: 600;
-  color: #22c55e;
-}
-
-.empty-state {
-  padding: 60px 20px;
-  text-align: center;
-  color: #9ca3af;
-}
-
-.empty-state svg {
-  margin-bottom: 20px;
-  opacity: 0.3;
-}
-
-.empty-state h3 {
-  margin: 0 0 8px 0;
-  font-size: 20px;
-  color: #333;
-}
-
-.empty-state p {
-  margin: 0 0 24px 0;
-  font-size: 14px;
-}
-
-.btn-primary {
-  display: inline-block;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: transform 0.2s;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-}
-</style>

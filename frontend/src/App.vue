@@ -2,16 +2,20 @@
   <router-view />
 
   <!-- PWA Update Prompt -->
-  <div v-if="needRefresh" class="pwa-toast">
-    <div class="pwa-message">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <div v-if="needRefresh" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-2xl p-4 z-[9999] max-w-[90%] w-[400px] flex flex-col gap-3 animate-slide-up">
+    <div class="flex items-center gap-3 text-gray-800 font-medium">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary shrink-0">
         <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
       </svg>
       <span>New version available!</span>
     </div>
-    <div class="pwa-actions">
-      <button @click="updateServiceWorker" class="pwa-btn primary">Update</button>
-      <button @click="closePrompt" class="pwa-btn secondary">Later</button>
+    <div class="flex gap-2">
+      <button @click="updateServiceWorker" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg font-semibold text-sm cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/40">
+        Update
+      </button>
+      <button @click="closePrompt" class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-lg font-semibold text-sm cursor-pointer transition-colors hover:bg-gray-200">
+        Later
+      </button>
     </div>
   </div>
 </template>
@@ -35,50 +39,7 @@ const closePrompt = () => {
 </script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Ensure all view containers fill width and remove any default margins */
-.home,
-.products,
-.scan,
-.transactions,
-.profile {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-/* PWA Update Toast */
-.pwa-toast {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  padding: 16px 20px;
-  z-index: 9999;
-  max-width: 90%;
-  width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
+@keyframes slide-up {
   from {
     transform: translate(-50%, 100px);
     opacity: 0;
@@ -89,51 +50,7 @@ body {
   }
 }
 
-.pwa-message {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #333;
-  font-weight: 500;
-}
-
-.pwa-message svg {
-  color: #667eea;
-  flex-shrink: 0;
-}
-
-.pwa-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.pwa-btn {
-  flex: 1;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.pwa-btn.primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.pwa-btn.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.pwa-btn.secondary {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.pwa-btn.secondary:hover {
-  background: #e5e7eb;
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }
 </style>

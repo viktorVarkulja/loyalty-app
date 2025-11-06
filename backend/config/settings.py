@@ -181,8 +181,10 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",  # Vite default port
+    "http://localhost:5179",  # Current Vite port
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:5179",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
