@@ -10,7 +10,7 @@ class TransactionItemSerializer(serializers.ModelSerializer):
         model = TransactionItem
         fields = [
             'id', 'product_id', 'product_name', 'quantity',
-            'price', 'points', 'matched'
+            'price', 'unit_price', 'points', 'matched'
         ]
         read_only_fields = ['id']
 
@@ -24,7 +24,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = [
-            'id', 'store', 'total_points', 'receipt_url',
+            'id', 'store', 'total_points', 'total_amount', 'receipt_url',
             'receipt_data', 'scanned_at', 'created_at', 'items'
         ]
         read_only_fields = ['id', 'scanned_at', 'created_at']

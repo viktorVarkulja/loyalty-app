@@ -32,90 +32,259 @@ class ReceiptProcessingService:
         return None
 
     @staticmethod
-    def fetch_receipt_data(receipt_url: str) -> Optional[Dict]:
+    def extract_invoice_params(receipt_url: str) -> Optional[Dict]:
         """
-        Fetch receipt data from Serbian fiscal system.
+        Extract invoice number and token from the receipt URL.
+        The HTML page contains these in JavaScript within script tags:
+        - viewModel.InvoiceNumber('M4XG7WCS-M4XG7WCS-56123')
+        - viewModel.Token('8e9b6f78-3747-4929-ad10-0f3fe5391755')
 
-        Serbian fiscal receipts (SUF system) require a specific approach:
-        1. The URL format is: https://suf.purs.gov.rs/v/?vl=...
-        2. Need to check if there's a JSON API endpoint
-        3. May need to add a specific parameter or path to get JSON
+        Invoice number can also be found in element with id="invoiceNumberLabel"
         """
         try:
-            # Try multiple approaches to get receipt data
+            from bs4 import BeautifulSoup
+            import re
 
-            # Approach 1: Try with JSON accept header
             headers = {
-                'Accept': 'application/json',
-                'User-Agent': 'LoyaltyApp/1.0'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
             response = requests.get(receipt_url, headers=headers, timeout=10)
             response.raise_for_status()
 
-            print(f"Response status: {response.status_code}")
+            soup = BeautifulSoup(response.text, 'lxml')
+
+            invoice_number = None
+            token = None
+
+            # Method 1: Look for viewModel.InvoiceNumber() and viewModel.Token() in script tags
+            scripts = soup.find_all('script', type='text/javascript')
+            for script in scripts:
+                if script.string:
+                    # Match: viewModel.InvoiceNumber('M4XG7WCS-M4XG7WCS-56123')
+                    inv_match = re.search(r'viewModel\.InvoiceNumber\(["\']([^"\']+)["\']\)', script.string)
+                    if inv_match:
+                        invoice_number = inv_match.group(1)
+                        print(f"Found invoice number in viewModel: {invoice_number}")
+
+                    # Match: viewModel.Token('8e9b6f78-3747-4929-ad10-0f3fe5391755')
+                    token_match = re.search(r'viewModel\.Token\(["\']([^"\']+)["\']\)', script.string)
+                    if token_match:
+                        token = token_match.group(1)
+                        print(f"Found token in viewModel: {token[:20]}...")
+
+                    # Break if both found
+                    if invoice_number and token:
+                        break
+
+            # Method 2: Look for invoice number in element with id="invoiceNumberLabel"
+            if not invoice_number:
+                inv_label = soup.find(id='invoiceNumberLabel')
+                if inv_label:
+                    invoice_number = inv_label.get_text(strip=True)
+                    print(f"Found invoice number in label: {invoice_number}")
+
+            # Method 3: Fallback - look for any invoiceNumber patterns
+            if not invoice_number:
+                all_scripts = soup.find_all('script')
+                for script in all_scripts:
+                    if script.string:
+                        inv_match = re.search(r'invoiceNumber["\']?\s*[:=]\s*["\']([^"\']+)', script.string, re.IGNORECASE)
+                        if inv_match:
+                            invoice_number = inv_match.group(1)
+                            print(f"Found invoice number (fallback): {invoice_number}")
+                            break
+
+            # Method 4: Fallback - look for any token patterns
+            if not token:
+                all_scripts = soup.find_all('script')
+                for script in all_scripts:
+                    if script.string:
+                        token_match = re.search(r'token["\']?\s*[:=]\s*["\']([a-f0-9\-]{36})', script.string, re.IGNORECASE)
+                        if token_match:
+                            token = token_match.group(1)
+                            print(f"Found token (fallback): {token[:20]}...")
+                            break
+
+            if invoice_number and token:
+                print(f"Successfully extracted invoice params - Number: {invoice_number}, Token: {token[:20]}...")
+                return {
+                    'invoiceNumber': invoice_number,
+                    'token': token
+                }
+
+            print(f"Could not extract invoice parameters from HTML")
+            print(f"Invoice number found: {invoice_number is not None}")
+            print(f"Token found: {token is not None}")
+            return None
+
+        except Exception as e:
+            print(f"Error extracting invoice params: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
+    @staticmethod
+    def fetch_receipt_data(receipt_url: str) -> Optional[Dict]:
+        """
+        Fetch receipt data from Serbian fiscal system.
+
+        The SUF system requires a two-step process:
+        1. GET the receipt page to extract invoiceNumber and token
+        2. POST to /specifications endpoint with these parameters
+        """
+        try:
+            # Step 1: Extract invoice parameters from the receipt page
+            params = ReceiptProcessingService.extract_invoice_params(receipt_url)
+            if not params:
+                print("Failed to extract invoice parameters from receipt URL")
+                return None
+
+            # Step 2: POST to specifications endpoint
+            specifications_url = "https://suf.purs.gov.rs/specifications"
+
+            headers = {
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Origin': 'https://suf.purs.gov.rs',
+                'Referer': receipt_url,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+
+            # Prepare form data
+            form_data = {
+                'invoiceNumber': params['invoiceNumber'],
+                'token': params['token']
+            }
+
+            print(f"Posting to specifications endpoint...")
+            response = requests.post(
+                specifications_url,
+                headers=headers,
+                data=form_data,
+                timeout=10
+            )
+            response.raise_for_status()
+
+            print(f"Specifications response status: {response.status_code}")
             print(f"Response content type: {response.headers.get('Content-Type')}")
             print(f"Response preview: {response.text[:500]}")
 
-            # Try to parse as JSON
-            try:
-                receipt_data = response.json()
-                return receipt_data
-            except ValueError:
-                # Response is HTML, not JSON
-                print("Response is not JSON, might be HTML page")
-
-                # Approach 2: Try appending /json or checking for API endpoint
-                if '/v/' in receipt_url:
-                    # Try alternative endpoints
-                    json_url = receipt_url.replace('/v/', '/api/v/')
-                    try:
-                        json_response = requests.get(json_url, headers=headers, timeout=10)
-                        if json_response.status_code == 200:
-                            return json_response.json()
-                    except:
-                        pass
-
-                # If we get HTML, we might need to parse it or call a different endpoint
-                # For now, return None - this needs the actual SUF API documentation
-                return None
+            # Parse JSON response
+            receipt_data = response.json()
+            return receipt_data
 
         except requests.RequestException as e:
             print(f"Error fetching receipt data: {e}")
+            return None
+        except ValueError as e:
+            print(f"Error parsing JSON response: {e}")
             return None
 
     @staticmethod
     def parse_receipt_items(receipt_data: Dict) -> List[Dict]:
         """
-        Parse items from Serbian fiscal receipt data.
-        Returns list of items with name, quantity, price.
+        Parse items from Serbian fiscal receipt data from SUF /specifications endpoint.
+
+        Expected JSON structure:
+        {
+            "success": true,
+            "items": [
+                {
+                    "gtin": "8600115405206",
+                    "name": "Cigarete Terea Oasis pearl/KOM",
+                    "quantity": 1,
+                    "total": 380,
+                    "unitPrice": 380,
+                    "label": "Ђ",
+                    "labelRate": 20,
+                    "taxBaseAmount": 316.67,
+                    "vatAmount": 63.33
+                }
+            ]
+        }
         """
         items = []
 
-        # Serbian fiscal receipts typically have items in 'specifikacija' or 'items' field
-        raw_items = receipt_data.get('specifikacija') or receipt_data.get('items') or []
+        # Check if the response is successful
+        if not receipt_data.get('success'):
+            print(f"Receipt data success=False: {receipt_data}")
+            return items
+
+        # Get items array from the response
+        raw_items = receipt_data.get('items', [])
+
+        print(f"Parsing {len(raw_items)} items from receipt data")
 
         for item in raw_items:
             parsed_item = {
-                'name': item.get('naziv') or item.get('name', 'Unknown Product'),
-                'quantity': item.get('kolicina') or item.get('quantity', 1),
-                'price': item.get('ukupnaCena') or item.get('totalPrice') or item.get('price', 0.0),
-                'unit_price': item.get('jedinicnaCenaSaPDV') or item.get('unitPrice', 0.0),
+                'name': item.get('name', 'Unknown Product'),
+                'quantity': item.get('quantity', 1),
+                'total': float(item.get('total', 0.0)),  # Total price for all quantities
+                'unit_price': float(item.get('unitPrice', 0.0)),  # Price per unit
+                'gtin': item.get('gtin', ''),  # Barcode/GTIN
             }
+            print(f"  - {parsed_item['name']}: {parsed_item['quantity']}x @ {parsed_item['unit_price']} = {parsed_item['total']}")
             items.append(parsed_item)
 
         return items
 
     @staticmethod
-    def extract_store_info(receipt_data: Dict) -> Dict:
+    def extract_store_info(receipt_url: str) -> Dict:
         """
-        Extract store information from receipt data.
-        Returns store name and location.
+        Extract store information from the SUF receipt HTML page.
+        Store info is in HTML elements with specific IDs:
+        - tinLabel: PIB (Tax ID)
+        - shopFullNameLabel: Store name
+        - addressLabel: Address
+        - cityLabel: City
         """
-        return {
-            'name': receipt_data.get('imeProdajnogMesta') or receipt_data.get('storeName', 'Unknown Store'),
-            'location': receipt_data.get('adresa') or receipt_data.get('address', ''),
-            'pib': receipt_data.get('pib') or receipt_data.get('taxId', ''),
-        }
+        try:
+            from bs4 import BeautifulSoup
+
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            response = requests.get(receipt_url, headers=headers, timeout=10)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.text, 'lxml')
+
+            # Extract PIB (Tax ID Number)
+            tin_elem = soup.find(id='tinLabel')
+            tin = tin_elem.get_text(strip=True) if tin_elem else ''
+
+            # Extract store name
+            shop_name_elem = soup.find(id='shopFullNameLabel')
+            shop_name = shop_name_elem.get_text(strip=True) if shop_name_elem else 'Unknown Store'
+
+            # Extract address
+            address_elem = soup.find(id='addressLabel')
+            address = address_elem.get_text(strip=True) if address_elem else ''
+
+            # Extract city
+            city_elem = soup.find(id='cityLabel')
+            city = city_elem.get_text(strip=True) if city_elem else ''
+
+            # Combine address and city for location
+            location = f"{address}, {city}" if address and city else address or city
+
+            print(f"Extracted store info - Name: {shop_name}, TIN: {tin}, Location: {location}")
+
+            return {
+                'name': shop_name,
+                'location': location,
+                'tin': tin,
+            }
+
+        except Exception as e:
+            print(f"Error extracting store info: {e}")
+            return {
+                'name': 'Unknown Store',
+                'location': '',
+                'tin': '',
+            }
 
     @staticmethod
     def match_product_by_name(product_name: str, products_db) -> Tuple[Optional[object], int]:
@@ -188,8 +357,8 @@ class ReceiptProcessingService:
                 'error': 'No items found in receipt'
             }
 
-        # Extract store information
-        store_info = cls.extract_store_info(receipt_data)
+        # Extract store information from the HTML page
+        store_info = cls.extract_store_info(receipt_url)
 
         # Get or create store
         store, created = Store.objects.get_or_create(
@@ -201,6 +370,7 @@ class ReceiptProcessingService:
         products_db = Product.objects.all()
         matched_items = []
         total_points = 0
+        total_amount = 0.0
 
         for item in items:
             matched_product, points = cls.match_product_by_name(item['name'], products_db)
@@ -208,19 +378,22 @@ class ReceiptProcessingService:
             matched_items.append({
                 'product_name': item['name'],
                 'quantity': item['quantity'],
-                'price': item['price'],
+                'price': item['total'],  # Total price for this line item
+                'unit_price': item['unit_price'],  # Price per unit
                 'matched': matched_product is not None,
                 'product_id': matched_product.id if matched_product else None,
                 'points': points * item['quantity']
             })
 
             total_points += points * item['quantity']
+            total_amount += item['total']
 
         # Create transaction
         transaction = Transaction.objects.create(
             user=user,
             store=store,
             total_points=total_points,
+            total_amount=total_amount,
             receipt_url=receipt_url,
             receipt_data=receipt_data
         )
@@ -233,6 +406,7 @@ class ReceiptProcessingService:
                 product_name=item_data['product_name'],
                 quantity=item_data['quantity'],
                 price=item_data['price'],
+                unit_price=item_data['unit_price'],
                 points=item_data['points'],
                 matched=item_data['matched']
             )

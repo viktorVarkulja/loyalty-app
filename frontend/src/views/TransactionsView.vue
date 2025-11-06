@@ -58,7 +58,7 @@
               </svg>
             </div>
             <div class="flex-1 min-w-0">
-              <h3 class="m-0 mb-1 text-base font-semibold text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis">{{ transaction.store_name || 'Unknown Store' }}</h3>
+              <h3 class="m-0 mb-1 text-base font-semibold text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis">{{ transaction.store?.name || 'Unknown Store' }}</h3>
               <p class="m-0 mb-2 text-[13px] text-gray-400">{{ formatDate(transaction.scanned_at) }}</p>
               <div class="flex items-center gap-3">
                 <span class="text-xs text-gray-500 flex items-center gap-1">
@@ -67,7 +67,7 @@
                     <circle cx="20" cy="21" r="1"></circle>
                     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                   </svg>
-                  {{ transaction.total_items }} items
+                  {{ transaction.items?.length || 0 }} items
                 </span>
                 <span class="text-xs text-gray-500">
                   {{ formatCurrency(transaction.total_amount) }}
@@ -141,7 +141,7 @@
               <h3 class="m-0 mb-4 text-base font-semibold text-gray-800">Receipt Information</h3>
               <div class="flex justify-between items-center py-3 border-b border-gray-100">
                 <span class="text-sm text-gray-400 font-medium">Store</span>
-                <span class="text-[15px] text-gray-800 font-semibold text-right">{{ selectedTransaction.store_name || 'Unknown Store' }}</span>
+                <span class="text-[15px] text-gray-800 font-semibold text-right">{{ selectedTransaction.store?.name || 'Unknown Store' }}</span>
               </div>
               <div class="flex justify-between items-center py-3 border-b border-gray-100">
                 <span class="text-sm text-gray-400 font-medium">Date & Time</span>
@@ -158,7 +158,7 @@
             </div>
 
             <div class="mb-0" v-if="selectedTransaction.items && selectedTransaction.items.length > 0">
-              <h3 class="m-0 mb-4 text-base font-semibold text-gray-800">Items ({{ selectedTransaction.total_items }})</h3>
+              <h3 class="m-0 mb-4 text-base font-semibold text-gray-800">Items ({{ selectedTransaction.items.length }})</h3>
               <div class="flex flex-col gap-3">
                 <div v-for="item in selectedTransaction.items" :key="item.id" class="flex justify-between items-start p-3 bg-gray-50 rounded-lg">
                   <div class="flex-1 min-w-0">
@@ -166,8 +166,8 @@
                     <p class="m-0 text-xs text-gray-400">{{ item.quantity }}x {{ formatCurrency(item.unit_price) }}</p>
                   </div>
                   <div class="text-right ml-3">
-                    <p class="m-0 mb-1 text-sm font-semibold text-gray-800">{{ formatCurrency(item.total_price) }}</p>
-                    <p class="m-0 text-xs text-primary font-semibold" v-if="item.points_earned > 0">+{{ item.points_earned }} pts</p>
+                    <p class="m-0 mb-1 text-sm font-semibold text-gray-800">{{ formatCurrency(item.price) }}</p>
+                    <p class="m-0 text-xs text-primary font-semibold" v-if="item.points > 0">+{{ item.points }} pts</p>
                   </div>
                 </div>
               </div>
@@ -212,6 +212,7 @@ const fetchTransactions = async (page = 1) => {
 
 const selectTransaction = (transaction) => {
   selectedTransaction.value = transaction
+  console.log(selectTransaction.value)
 }
 
 const closeModal = () => {
@@ -231,7 +232,7 @@ const nextPage = () => {
 }
 
 const formatCurrency = (amount) => {
-  if (!amount) return 'N/A'
+  if (amount === null || amount === undefined) return 'N/A'
   return new Intl.NumberFormat('sr-RS', {
     style: 'currency',
     currency: 'RSD'

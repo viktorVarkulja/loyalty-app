@@ -29,7 +29,8 @@ class Transaction(models.Model):
         db_index=True
     )
     total_points = models.IntegerField()
-    receipt_url = models.URLField(max_length=500, null=True, blank=True)
+    total_amount = models.FloatField(null=True, blank=True)  # Total purchase amount in RSD
+    receipt_url = models.URLField(max_length=2000, null=True, blank=True)  # Serbian fiscal URLs can be very long
     receipt_data = models.JSONField(null=True, blank=True)
     scanned_at = models.DateTimeField(auto_now_add=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -66,7 +67,8 @@ class TransactionItem(models.Model):
     )
     product_name = models.CharField(max_length=255)
     quantity = models.IntegerField(default=1)
-    price = models.FloatField(null=True, blank=True)
+    price = models.FloatField(null=True, blank=True)  # Total price for this line item
+    unit_price = models.FloatField(null=True, blank=True)  # Price per unit
     points = models.IntegerField(default=0)
     matched = models.BooleanField(default=False)
 
