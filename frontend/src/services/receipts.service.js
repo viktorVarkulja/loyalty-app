@@ -7,7 +7,7 @@ export const receiptsService = {
    * @returns {Promise<Object>} - Transaction details with matched/unmatched items
    */
   async scanReceipt(qrData) {
-    const response = await api.post('/transactions/receipts/scan/', { qr_data: qrData })
+    const response = await api.post('/receipts/scan/', { qr_data: qrData })
     return response.data
   }
 }

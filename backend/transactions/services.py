@@ -35,9 +35,16 @@ class ReceiptProcessingService:
     def fetch_receipt_data(receipt_url: str) -> Optional[Dict]:
         """
         Fetch receipt data from Serbian fiscal system.
-        Sends request with Accept: application/json header to get JSON response.
+
+        Serbian fiscal receipts (SUF system) require a specific approach:
+        1. The URL format is: https://suf.purs.gov.rs/v/?vl=...
+        2. Need to check if there's a JSON API endpoint
+        3. May need to add a specific parameter or path to get JSON
         """
         try:
+            # Try multiple approaches to get receipt data
+
+            # Approach 1: Try with JSON accept header
             headers = {
                 'Accept': 'application/json',
                 'User-Agent': 'LoyaltyApp/1.0'
@@ -45,15 +52,35 @@ class ReceiptProcessingService:
             response = requests.get(receipt_url, headers=headers, timeout=10)
             response.raise_for_status()
 
-            # Try to parse JSON
-            receipt_data = response.json()
-            return receipt_data
+            print(f"Response status: {response.status_code}")
+            print(f"Response content type: {response.headers.get('Content-Type')}")
+            print(f"Response preview: {response.text[:500]}")
+
+            # Try to parse as JSON
+            try:
+                receipt_data = response.json()
+                return receipt_data
+            except ValueError:
+                # Response is HTML, not JSON
+                print("Response is not JSON, might be HTML page")
+
+                # Approach 2: Try appending /json or checking for API endpoint
+                if '/v/' in receipt_url:
+                    # Try alternative endpoints
+                    json_url = receipt_url.replace('/v/', '/api/v/')
+                    try:
+                        json_response = requests.get(json_url, headers=headers, timeout=10)
+                        if json_response.status_code == 200:
+                            return json_response.json()
+                    except:
+                        pass
+
+                # If we get HTML, we might need to parse it or call a different endpoint
+                # For now, return None - this needs the actual SUF API documentation
+                return None
 
         except requests.RequestException as e:
             print(f"Error fetching receipt data: {e}")
-            return None
-        except ValueError:
-            print("Invalid JSON response from receipt URL")
             return None
 
     @staticmethod
@@ -132,6 +159,10 @@ class ReceiptProcessingService:
         """
         from products.models import Product, Store
         from .models import Transaction, TransactionItem
+
+        # TESTING MODE: If QR data starts with "TEST:", use mock data
+        if qr_data.startswith("TEST:"):
+            return cls.process_mock_receipt(qr_data, user)
 
         # Extract URL from QR code
         receipt_url = cls.extract_url_from_qr(qr_data)
@@ -222,3 +253,110 @@ class ReceiptProcessingService:
             'items': matched_items,
             'unmatched_items': [item for item in matched_items if not item['matched']]
         }
+
+    @classmethod
+    def process_mock_receipt(cls, qr_data: str, user) -> Dict:
+        """
+        Process a mock receipt for testing purposes.
+        QR data format: TEST:store_name:item1_name:item1_qty:item1_price,item2_name:item2_qty:item2_price
+        Example: TEST:Maxi:Mleko:2:150.00,Hleb:1:80.00
+        """
+        from products.models import Product, Store
+        from .models import Transaction, TransactionItem
+        import random
+
+        try:
+            # Parse mock QR data
+            parts = qr_data.split(':')
+            if len(parts) < 3:
+                # Simple test mode - create random receipt
+                store_name = "Test Store"
+                items = [
+                    {'name': 'Test Product 1', 'quantity': 2, 'price': 150.00},
+                    {'name': 'Test Product 2', 'quantity': 1, 'price': 250.00},
+                ]
+            else:
+                store_name = parts[1]
+                items = []
+                # Parse items (format: name:qty:price)
+                for item_str in parts[2:]:
+                    item_parts = item_str.split(',')
+                    for item_part in item_parts:
+                        item_data = item_part.split(':')
+                        if len(item_data) >= 3:
+                            items.append({
+                                'name': item_data[0],
+                                'quantity': int(item_data[1]),
+                                'price': float(item_data[2])
+                            })
+
+            # Get or create test store
+            store, _ = Store.objects.get_or_create(
+                name=store_name,
+                defaults={'location': 'Test Location'}
+            )
+
+            # Match products
+            products_db = Product.objects.all()
+            matched_items = []
+            total_points = 0
+
+            for item in items:
+                matched_product, points = cls.match_product_by_name(item['name'], products_db)
+
+                matched_items.append({
+                    'product_name': item['name'],
+                    'quantity': item['quantity'],
+                    'price': item['price'],
+                    'matched': matched_product is not None,
+                    'product_id': matched_product.id if matched_product else None,
+                    'points': points * item['quantity']
+                })
+
+                total_points += points * item['quantity']
+
+            # Create transaction with unique test URL
+            test_url = f"TEST_{random.randint(100000, 999999)}"
+            transaction = Transaction.objects.create(
+                user=user,
+                store=store,
+                total_points=total_points,
+                receipt_url=test_url,
+                receipt_data={'test': True, 'original_qr': qr_data}
+            )
+
+            # Create transaction items
+            for item_data in matched_items:
+                TransactionItem.objects.create(
+                    transaction=transaction,
+                    product_id=item_data['product_id'],
+                    product_name=item_data['product_name'],
+                    quantity=item_data['quantity'],
+                    price=item_data['price'],
+                    points=item_data['points'],
+                    matched=item_data['matched']
+                )
+
+            # Update user points
+            user.points += total_points
+            user.save()
+
+            return {
+                'success': True,
+                'transaction_id': transaction.id,
+                'store': {
+                    'id': store.id,
+                    'name': store.name,
+                    'location': store.location
+                },
+                'total_points': total_points,
+                'items': matched_items,
+                'unmatched_items': [item for item in matched_items if not item['matched']],
+                'test_mode': True
+            }
+
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f'Error processing mock receipt: {str(e)}'
+            }

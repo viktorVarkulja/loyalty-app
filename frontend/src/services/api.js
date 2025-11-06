@@ -1,4 +1,5 @@
 import axios from 'axios'
+import router from '../router'
 
 const API_BASE_URL = 'http://localhost:8000/api'
 
@@ -47,12 +48,13 @@ api.interceptors.response.use(
           // Retry original request with new token
           originalRequest.headers.Authorization = `Bearer ${access}`
           return api(originalRequest)
+        } else {
+          // No refresh token, redirect to login
+          handleLogout()
         }
       } catch (refreshError) {
         // Refresh failed, clear auth and redirect to login
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        window.location.href = '/login'
+        handleLogout()
         return Promise.reject(refreshError)
       }
     }
@@ -60,5 +62,18 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// Function to handle logout and redirect
+function handleLogout() {
+  // Clear all auth data from localStorage
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('auth')
+
+  // Redirect to login
+  if (router.currentRoute.value.path !== '/login') {
+    router.push('/login')
+  }
+}
 
 export default api

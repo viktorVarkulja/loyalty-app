@@ -20,21 +20,19 @@ class Transaction(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='transactions',
-        db_index=True,
-        db_column='userId'
+        db_index=True
     )
     store = models.ForeignKey(
         Store,
         on_delete=models.PROTECT,
         related_name='transactions',
-        db_index=True,
-        db_column='storeId'
+        db_index=True
     )
-    total_points = models.IntegerField(db_column='totalPoints')
-    receipt_url = models.URLField(max_length=500, null=True, blank=True, db_column='receiptUrl')
-    receipt_data = models.JSONField(null=True, blank=True, db_column='receiptData')
-    scanned_at = models.DateTimeField(auto_now_add=True, db_index=True, db_column='scannedAt')
-    created_at = models.DateTimeField(auto_now_add=True, db_column='createdAt')
+    total_points = models.IntegerField()
+    receipt_url = models.URLField(max_length=500, null=True, blank=True)
+    receipt_data = models.JSONField(null=True, blank=True)
+    scanned_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'transactions'
@@ -57,18 +55,16 @@ class TransactionItem(models.Model):
         Transaction,
         on_delete=models.CASCADE,
         related_name='items',
-        db_index=True,
-        db_column='transactionId'
+        db_index=True
     )
     product = models.ForeignKey(
         Product,
         on_delete=models.SET_NULL,
         related_name='transaction_items',
         null=True,
-        blank=True,
-        db_column='productId'
+        blank=True
     )
-    product_name = models.CharField(max_length=255, db_column='productName')
+    product_name = models.CharField(max_length=255)
     quantity = models.IntegerField(default=1)
     price = models.FloatField(null=True, blank=True)
     points = models.IntegerField(default=0)

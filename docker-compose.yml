@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: loyalty-postgres
+    container_name: serbian-loyalty-db
     restart: unless-stopped
     ports:
       - "5432:5432"
