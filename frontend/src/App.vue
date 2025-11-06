@@ -48,15 +48,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ensure all view containers fill width and remove any default margins */
-.home,
-.products,
-.scan,
-.transactions,
-.profile {
-  width: 100%;
-  margin: 0;
-  padding: 0;
+#app {
+  min-height: 100vh;
 }
 
 /* PWA Update Toast */

@@ -372,7 +372,7 @@ onMounted(() => {
 }
 
 .transactions-list {
-  padding: 0 0 20px;
+  padding: 0 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -385,7 +385,6 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
-  margin: 0 20px;
 }
 
 .transaction-card:hover {

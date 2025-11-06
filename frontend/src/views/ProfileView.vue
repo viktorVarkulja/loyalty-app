@@ -264,11 +264,11 @@ onMounted(() => {
 }
 
 .section {
-  padding: 0 0 24px;
+  padding: 0 20px 24px;
 }
 
 .section-title {
-  margin: 0 20px 12px 20px;
+  margin: 0 0 12px 0;
   font-size: 16px;
   font-weight: 600;
   color: #333;
@@ -279,7 +279,6 @@ onMounted(() => {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin: 0 20px;
 }
 
 .info-row {
@@ -318,7 +317,6 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  margin: 0 20px;
 }
 
 .stat-card {
@@ -367,7 +365,6 @@ onMounted(() => {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin: 0 20px;
 }
 
 .action-item {
