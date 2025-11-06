@@ -25,7 +25,7 @@
       <!-- Quick Actions -->
       <div class="p-5">
         <h3 class="m-0 mb-4 text-lg font-semibold text-gray-800">Quick Actions</h3>
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-2 gap-3">
           <router-link to="/scan" class="bg-white p-5 rounded-xl no-underline flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]">
             <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-primary to-primary-dark">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -47,6 +47,17 @@
             </div>
             <span class="text-[13px] font-medium text-gray-800 text-center">View Products</span>
           </router-link>
+
+          <button @click="showWebshop = true" class="bg-white p-5 rounded-xl flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] border-none cursor-pointer">
+            <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-purple-500 to-purple-700">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+            </div>
+            <span class="text-[13px] font-medium text-gray-800 text-center">Webshop</span>
+          </button>
 
           <router-link to="/transactions" class="bg-white p-5 rounded-xl no-underline flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]">
             <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-warning to-amber-600">
@@ -91,6 +102,9 @@
         <router-link to="/scan" class="inline-block py-3 px-6 bg-gradient-to-br from-primary to-primary-dark text-white no-underline rounded-lg font-semibold transition-transform duration-200 hover:-translate-y-0.5">Scan Your First Receipt</router-link>
       </div>
     </div>
+
+    <!-- Webshop Modal -->
+    <WebshopModal :isVisible="showWebshop" @close="showWebshop = false" />
   </MainLayout>
 </template>
 
@@ -99,11 +113,13 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { transactionsService } from '../services'
 import MainLayout from '../components/MainLayout.vue'
+import WebshopModal from '../components/WebshopModal.vue'
 
 const authStore = useAuthStore()
 const pointsBalance = ref(0)
 const recentTransactions = ref([])
 const isLoading = ref(false)
+const showWebshop = ref(false)
 
 const fetchPointsBalance = async () => {
   try {
