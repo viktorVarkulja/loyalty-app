@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.utils.html import format_html
+from django.urls import reverse
+from django.utils import timezone
 from .models import Transaction, TransactionItem
 
 
@@ -6,7 +9,7 @@ class TransactionItemInline(admin.TabularInline):
     """Inline admin for transaction items."""
     model = TransactionItem
     extra = 0
-    readonly_fields = ['id', 'product', 'product_name', 'quantity', 'price', 'points', 'matched']
+    readonly_fields = ['id', 'product', 'product_name', 'quantity', 'price', 'unit_price', 'points', 'matched', 'review_status']
     can_delete = False
 
     def has_add_permission(self, request, obj=None):
@@ -41,19 +44,80 @@ class TransactionAdmin(admin.ModelAdmin):
 
 @admin.register(TransactionItem)
 class TransactionItemAdmin(admin.ModelAdmin):
-    """Admin interface for TransactionItem model."""
+    """Admin interface for TransactionItem model with review functionality."""
 
-    list_display = ['transaction', 'product_name', 'quantity', 'price', 'points', 'matched']
-    list_filter = ['matched']
-    search_fields = ['transaction__id', 'product_name', 'product__name']
-    ordering = ['-transaction__scanned_at']
-    readonly_fields = ['id', 'transaction', 'product', 'product_name', 'quantity', 'price', 'points', 'matched']
+    list_display = ['product_name', 'transaction_user', 'quantity', 'price', 'unit_price', 'points', 'matched', 'review_status_badge', 'review_requested_at']
+    list_filter = ['matched', 'review_status', 'review_requested_at']
+    search_fields = ['transaction__id', 'product_name', 'product__name', 'transaction__user__email']
+    ordering = ['-review_requested_at', '-transaction__scanned_at']
+    readonly_fields = ['id', 'transaction', 'product', 'product_name', 'quantity', 'price', 'unit_price', 'matched', 'review_requested_at']
+    actions = ['approve_reviews', 'reject_reviews']
 
     fieldsets = (
         (None, {'fields': ('id', 'transaction', 'product')}),
-        ('Product Info', {'fields': ('product_name', 'quantity', 'price')}),
-        ('Points', {'fields': ('points', 'matched')}),
+        ('Product Info', {'fields': ('product_name', 'quantity', 'price', 'unit_price')}),
+        ('Points & Matching', {'fields': ('points', 'matched')}),
+        ('Review Info', {'fields': ('review_status', 'review_requested_at', 'review_notes')}),
     )
+
+    def transaction_user(self, obj):
+        """Display user email from transaction."""
+        return obj.transaction.user.email
+    transaction_user.short_description = 'User'
+
+    def review_status_badge(self, obj):
+        """Display review status with color coding."""
+        colors = {
+            'none': 'gray',
+            'pending': 'orange',
+            'approved': 'green',
+            'rejected': 'red',
+        }
+        color = colors.get(obj.review_status, 'gray')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 10px; border-radius: 3px; font-size: 11px;">{}</span>',
+            color,
+            obj.get_review_status_display()
+        )
+    review_status_badge.short_description = 'Review Status'
+
+    def approve_reviews(self, request, queryset):
+        """Approve selected reviews and assign default points."""
+        updated = 0
+        for item in queryset.filter(review_status='pending'):
+            # Assign default 10 points
+            item.review_status = 'approved'
+            item.points = 10
+            item.review_notes = 'Approved by admin'
+            item.save()
+
+            # Update user points
+            user = item.transaction.user
+            user.points += 10
+            user.save()
+
+            # Update transaction total points
+            transaction = item.transaction
+            transaction.total_points += 10
+            transaction.save()
+
+            updated += 1
+
+        self.message_user(request, f'{updated} review(s) approved. 10 points awarded per item.')
+    approve_reviews.short_description = 'Approve selected reviews (10 points each)'
+
+    def reject_reviews(self, request, queryset):
+        """Reject selected reviews."""
+        updated = queryset.filter(review_status='pending').update(
+            review_status='rejected',
+            review_notes='Rejected by admin'
+        )
+        self.message_user(request, f'{updated} review(s) rejected.')
+    reject_reviews.short_description = 'Reject selected reviews'
+
+    def get_queryset(self, request):
+        """Optimize queryset with select_related."""
+        return super().get_queryset(request).select_related('transaction__user', 'product')
 
     def has_add_permission(self, request):
         """Transaction items are created via API only."""

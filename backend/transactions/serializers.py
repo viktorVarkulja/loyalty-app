@@ -10,9 +10,10 @@ class TransactionItemSerializer(serializers.ModelSerializer):
         model = TransactionItem
         fields = [
             'id', 'product_id', 'product_name', 'quantity',
-            'price', 'unit_price', 'points', 'matched'
+            'price', 'unit_price', 'points', 'matched',
+            'review_status', 'review_requested_at', 'review_notes'
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'review_requested_at']
 
 
 class TransactionSerializer(serializers.ModelSerializer):

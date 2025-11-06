@@ -72,6 +72,22 @@ class TransactionItem(models.Model):
     points = models.IntegerField(default=0)
     matched = models.BooleanField(default=False)
 
+    # Review status for unmatched products
+    REVIEW_STATUS_CHOICES = [
+        ('none', 'No Review'),
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    review_status = models.CharField(
+        max_length=20,
+        choices=REVIEW_STATUS_CHOICES,
+        default='none',
+        db_index=True
+    )
+    review_requested_at = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(null=True, blank=True)  # Admin notes or user comments
+
     class Meta:
         db_table = 'transaction_items'
         ordering = ['id']

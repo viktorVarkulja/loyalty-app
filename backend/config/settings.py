@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-w)muwp26_5mc!z!k9@mb3p!yv#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,172.27.143.193,10.1.2.227,10.60.117.239,0.0.0.0').split(',')
 
 
 # Application definition
@@ -181,10 +181,21 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",  # Vite default port
+    "http://localhost:5174",  # Alternative Vite port
     "http://localhost:5179",  # Current Vite port
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
     "http://127.0.0.1:5179",
+    "http://172.27.143.193:5173",  # WSL IP with Vite port
+    "http://172.27.143.193:5174",
+    "http://172.27.143.193:5179",
+    "http://10.1.2.227:5173",  # Old Windows host IP
+    "http://10.1.2.227:5174",
+    "http://10.1.2.227:5179",
+    "http://10.60.117.239:5173",  # New Windows host IP for phone access
+    "http://10.60.117.239:5174",  # New Windows host IP with port 5174
+    "http://10.60.117.239:5179",  # New Windows host IP with alternative port
 ]
 
 CORS_ALLOW_CREDENTIALS = True

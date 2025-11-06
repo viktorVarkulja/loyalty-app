@@ -1,8 +1,9 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
+from django.utils import timezone
 
 from .models import Transaction, TransactionItem
 from .serializers import (
@@ -103,4 +104,191 @@ def get_points_balance(request):
         'points': request.user.points,
         'user_id': request.user.id,
         'email': request.user.email
+    })
+
+
+@extend_schema(
+    summary="Request review for unmatched product",
+    description="Request admin review for a product that wasn't matched in the system.",
+    request={
+        'type': 'object',
+        'properties': {
+            'notes': {'type': 'string', 'description': 'Optional notes from user about the product'}
+        }
+    },
+    responses={
+        200: {'description': 'Review requested successfully'},
+        400: {'description': 'Item already matched or already under review'},
+        404: {'description': 'Transaction item not found'}
+    }
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def request_item_review(request, item_id):
+    """Request admin review for an unmatched product."""
+    try:
+        # Get the item and verify it belongs to user's transaction
+        item = TransactionItem.objects.select_related('transaction').get(
+            id=item_id,
+            transaction__user=request.user
+        )
+    except TransactionItem.DoesNotExist:
+        return Response(
+            {'error': 'Transaction item not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check if item is already matched
+    if item.matched:
+        return Response(
+            {'error': 'This product is already matched'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check if already under review
+    if item.review_status in ['pending', 'approved']:
+        return Response(
+            {'error': f'This product is already {item.review_status}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Update item status to pending review
+    item.review_status = 'pending'
+    item.review_requested_at = timezone.now()
+    item.review_notes = request.data.get('notes', '')
+    item.save()
+
+    return Response({
+        'success': True,
+        'message': 'Review request submitted successfully',
+        'item': TransactionItemSerializer(item).data
+    })
+
+
+@extend_schema(
+    summary="Get pending review items (Admin only)",
+    description="Get list of all products pending admin review.",
+)
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_pending_reviews(request):
+    """Get all items pending review (admin only)."""
+    items = TransactionItem.objects.filter(
+        review_status='pending'
+    ).select_related('transaction__user', 'transaction__store').order_by('-review_requested_at')
+
+    # Serialize with additional user info
+    items_data = []
+    for item in items:
+        item_data = TransactionItemSerializer(item).data
+        item_data['user'] = {
+            'id': item.transaction.user.id,
+            'email': item.transaction.user.email
+        }
+        item_data['store'] = {
+            'name': item.transaction.store.name,
+            'location': item.transaction.store.location
+        }
+        item_data['scanned_at'] = item.transaction.scanned_at
+        items_data.append(item_data)
+
+    return Response({
+        'count': len(items_data),
+        'items': items_data
+    })
+
+
+@extend_schema(
+    summary="Approve review and assign points (Admin only)",
+    description="Approve a product review and assign points to the user.",
+    request={
+        'type': 'object',
+        'properties': {
+            'product_id': {'type': 'string', 'description': 'ID of matching product'},
+            'points': {'type': 'integer', 'description': 'Points to award'},
+            'notes': {'type': 'string', 'description': 'Admin notes'}
+        },
+        'required': ['points']
+    }
+)
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def approve_review(request, item_id):
+    """Approve a review and assign points (admin only)."""
+    try:
+        item = TransactionItem.objects.select_related('transaction__user').get(id=item_id)
+    except TransactionItem.DoesNotExist:
+        return Response({'error': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if item.review_status != 'pending':
+        return Response(
+            {'error': 'Item is not pending review'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Get points from request
+    points = request.data.get('points', 0)
+    product_id = request.data.get('product_id')
+    admin_notes = request.data.get('notes', '')
+
+    # Update item
+    item.review_status = 'approved'
+    item.points = points
+    item.review_notes = admin_notes
+    if product_id:
+        item.product_id = product_id
+        item.matched = True
+    item.save()
+
+    # Update user points
+    user = item.transaction.user
+    user.points += points
+    user.save()
+
+    # Update transaction total points
+    transaction = item.transaction
+    transaction.total_points += points
+    transaction.save()
+
+    return Response({
+        'success': True,
+        'message': f'Review approved. {points} points awarded to user.',
+        'item': TransactionItemSerializer(item).data
+    })
+
+
+@extend_schema(
+    summary="Reject review (Admin only)",
+    description="Reject a product review request.",
+    request={
+        'type': 'object',
+        'properties': {
+            'notes': {'type': 'string', 'description': 'Reason for rejection'}
+        }
+    }
+)
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def reject_review(request, item_id):
+    """Reject a review request (admin only)."""
+    try:
+        item = TransactionItem.objects.get(id=item_id)
+    except TransactionItem.DoesNotExist:
+        return Response({'error': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if item.review_status != 'pending':
+        return Response(
+            {'error': 'Item is not pending review'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    admin_notes = request.data.get('notes', 'Rejected by admin')
+    item.review_status = 'rejected'
+    item.review_notes = admin_notes
+    item.save()
+
+    return Response({
+        'success': True,
+        'message': 'Review rejected',
+        'item': TransactionItemSerializer(item).data
     })
