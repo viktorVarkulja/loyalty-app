@@ -47,6 +47,7 @@ A modern, full-stack loyalty rewards application that enables users to scan rece
 - 🏬 **Store Management** - Manage store locations and details
 - 👥 **User Management** - View and manage user accounts
 - 📝 **Transaction Oversight** - Monitor all transactions and items
+- 📊 **Analytics & Reports** - Comprehensive statistics and reporting system
 
 ### Technical Features
 - 🔐 **JWT Authentication** - Secure token-based authentication
@@ -98,6 +99,7 @@ loyalty-app/
 │   ├── products/           # Products & stores models
 │   ├── transactions/       # Receipts & transaction processing
 │   ├── reviews/            # Product review system
+│   ├── analytics/          # Statistics & reports module
 │   ├── manage.py
 │   ├── requirements.txt
 │   └── venv/
@@ -244,6 +246,17 @@ Frontend will run at: http://localhost:5173
 - Admin approval/rejection workflow
 - Product linking to unmatched items
 
+#### **analytics/**
+- Store analytics with rankings and metrics
+- Product popularity tracking
+- User activity trends (daily/weekly/monthly)
+- Store-specific reports with top products and repeat customers
+- Leaderboards for users, stores, and products
+- Optimized queries with caching
+- Django Admin integration with CSV export
+- REST API endpoints for all statistics
+- Management command for periodic updates
+
 ### Frontend Structure
 
 #### **views/**
@@ -328,6 +341,21 @@ GET    /api/points/balance/         # Get points balance
 POST   /api/points/use/             # Use points (webshop)
 POST   /api/points/add/             # Add points (webshop)
 ```
+
+#### Analytics & Reports (Admin Only)
+```
+GET    /api/analytics/store-rankings/        # Store leaderboard by scans/points
+GET    /api/analytics/user-leaderboard/      # Top users by points
+GET    /api/analytics/product-leaderboard/   # Top products by scans
+GET    /api/analytics/weekly-trend/          # Weekly activity trend
+GET    /api/analytics/monthly-trend/         # Monthly activity trend
+GET    /api/analytics/store-report/?store_id=X  # Detailed store report
+GET    /api/analytics/most-scanned-products/ # Most popular products
+GET    /api/analytics/top-repeat-customers/  # Repeat customers by store
+POST   /api/analytics/refresh-all/           # Refresh all analytics cache
+```
+
+> **Note:** See `backend/analytics/README.md` for complete analytics documentation
 
 ---
 
@@ -509,11 +537,12 @@ For issues, questions, or suggestions:
 
 ## 🗺️ Roadmap
 
-- [ ] Statistics & Reports dashboard
+- [x] Statistics & Reports dashboard ✅ **COMPLETED**
+- [ ] Real-time analytics dashboards with charts
 - [ ] Email notifications for points milestones
 - [ ] Mobile app (React Native)
 - [ ] Multi-language support
-- [ ] Advanced analytics for admins
+- [ ] Predictive analytics with ML
 - [ ] Integration with more store systems
 - [ ] Gamification features (badges, levels)
 - [ ] Social sharing capabilities
