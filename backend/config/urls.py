@@ -36,6 +36,7 @@ urlpatterns = [
     path('api/', include('products.urls')),
     path('api/', include('transactions.urls')),
     path('api/', include('reviews.urls')),
+    path('api/analytics/', include('analytics.urls')),
 
     # Webshop API (external integration)
     path('api/', include(webshop_urlpatterns)),
