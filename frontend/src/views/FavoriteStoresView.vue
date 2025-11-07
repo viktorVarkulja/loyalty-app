@@ -141,7 +141,8 @@ const fetchData = async () => {
       productsService.getFavoriteStores()
     ])
 
-    allStores.value = stores
+    // Handle paginated response
+    allStores.value = stores.results || stores
     favoriteStores.value = favorites
   } catch (err) {
     console.error('Error fetching stores:', err)

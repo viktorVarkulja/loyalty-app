@@ -84,11 +84,17 @@ class TransactionItemAdmin(admin.ModelAdmin):
     def approve_reviews(self, request, queryset):
         """Approve selected reviews and assign default points."""
         from products.models import Product
+        from django.db.models import F
 
         print(f"🔍 ADMIN DEBUG - approve_reviews called")
         print(f"🔍 ADMIN DEBUG - Queryset count: {queryset.count()}")
 
-        updated = 0
+        # Group items by user and transaction for batch updates
+        users_to_update = {}
+        transactions_to_update = {}
+        items_to_process = []
+
+        # First pass: process items and collect users/transactions
         for item in queryset.filter(review_status='pending'):
             print(f"\n🔍 ADMIN DEBUG - Processing item: {item.product_name}")
             print(f"🔍 ADMIN DEBUG - Item ID: {item.id}")
@@ -118,24 +124,38 @@ class TransactionItemAdmin(admin.ModelAdmin):
             item.points = 10
             item.review_notes = 'Approved by admin'
             print(f"🔍 ADMIN DEBUG - Saving item with matched=True, points=10")
+
+            items_to_process.append(item)
+
+            # Track points per user and transaction
+            user_id = item.transaction.user.id
+            transaction_id = item.transaction.id
+
+            users_to_update[user_id] = users_to_update.get(user_id, 0) + 10
+            transactions_to_update[transaction_id] = transactions_to_update.get(transaction_id, 0) + 10
+
+        # Save all items
+        for item in items_to_process:
             item.save()
 
-            # Update user points
-            user = item.transaction.user
+        # Update user points in batch
+        from users.models import User
+        for user_id, points_to_add in users_to_update.items():
+            user = User.objects.get(id=user_id)
             old_points = user.points
-            user.points += 10
+            user.points += points_to_add
             user.save()
-            print(f"🔍 ADMIN DEBUG - User {user.email}: {old_points} -> {user.points} points")
+            print(f"🔍 ADMIN DEBUG - User {user.email}: {old_points} -> {user.points} points (+{points_to_add})")
 
-            # Update transaction total points
-            transaction = item.transaction
+        # Update transaction totals in batch
+        for transaction_id, points_to_add in transactions_to_update.items():
+            transaction = Transaction.objects.get(id=transaction_id)
             old_total = transaction.total_points
-            transaction.total_points += 10
+            transaction.total_points += points_to_add
             transaction.save()
-            print(f"🔍 ADMIN DEBUG - Transaction total: {old_total} -> {transaction.total_points} points")
+            print(f"🔍 ADMIN DEBUG - Transaction {transaction_id}: {old_total} -> {transaction.total_points} points (+{points_to_add})")
 
-            updated += 1
-
+        updated = len(items_to_process)
         print(f"\n✅ ADMIN DEBUG - Completed! Updated {updated} items")
         self.message_user(request, f'{updated} review(s) approved. Products created and 10 points awarded per item.')
     approve_reviews.short_description = 'Approve selected reviews (10 points each)'
