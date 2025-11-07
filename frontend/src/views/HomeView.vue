@@ -25,7 +25,7 @@
       <!-- Quick Actions -->
       <div class="p-5">
         <h3 class="m-0 mb-4 text-lg font-semibold text-gray-800">Quick Actions</h3>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <router-link to="/scan" class="bg-white p-5 rounded-xl no-underline flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]">
             <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-primary to-primary-dark">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -67,6 +67,25 @@
               </svg>
             </div>
             <span class="text-[13px] font-medium text-gray-800 text-center">Transaction History</span>
+          </router-link>
+
+          <router-link to="/favorite-stores" class="bg-white p-5 rounded-xl no-underline flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]">
+            <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-pink-500 to-pink-700">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </div>
+            <span class="text-[13px] font-medium text-gray-800 text-center">Favorite Stores</span>
+          </router-link>
+
+          <router-link to="/profile" class="bg-white p-5 rounded-xl no-underline flex flex-col items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)]">
+            <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-indigo-500 to-indigo-700">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <span class="text-[13px] font-medium text-gray-800 text-center">Profile</span>
           </router-link>
         </div>
       </div>
